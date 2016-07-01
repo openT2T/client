@@ -1,0 +1,1 @@
+This is an Android class library that hosts the OpenT2T runtime in and Android client application.

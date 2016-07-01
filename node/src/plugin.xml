@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="opent2t-client" version="0.1.0"
+        xmlns="http://schemas.microsoft.com/convene/0.1"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>OpenT2T Client Lib</name>
+    <description>Embeds the OpenT2T runtime in a client application.</description>
+    <author>jasongin@microsoft.com</author>
+    <keywords>opent2t</keywords>
+    <license></license>
+
+    <assembly name="OpenT2T" js-target="opent2t">
+    </assembly>
+
+    <platform name="android">
+        <namespace-mapping package="io.opent2t" namespace="OpenT2T" />
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+        </config-file>
+    </platform>
+
+    <platform name="ios">
+        <namespace-mapping prefix="OT2T" namespace="OpenT2T" />
+    </platform>
+
+    <platform name="windows">
+        <include namespace="OpenT2T" />
+    </platform>
+</plugin>
