@@ -11,6 +11,7 @@ build/
 
 # XCode preferences and intermediate files
 *.userprefs
+*.xcworkspacedata
 xcuserdata/
 *.cache
 *.ipch

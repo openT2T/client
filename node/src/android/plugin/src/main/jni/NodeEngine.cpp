@@ -1,12 +1,13 @@
 
 #include <functional>
 #include <exception>
+#include <stdexcept>
 #include <jni.h>
 #include <android/log.h>
 
 #include "INodeEngine.h"
 #include "JXCoreEngine.h"
-#include "Utils.h"
+#include "JniUtils.h"
 
 #define ALOG_TAG "OpenT2T.NodeEngine.JNI"
 

@@ -1,4 +1,7 @@
 
+namespace OpenT2T
+{
+
 class INodeEngine
 {
 public:
@@ -16,3 +19,5 @@ public:
         const char* scriptFunctionName,
         std::function<void(const char* argsJson)> callback) = 0;
 };
+
+}

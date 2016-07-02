@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenT2TClientLib", "OpenT2TClientLib.vcxproj", "{45DAA097-9C76-4841-AB41-FD3F6DEA640E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenT2TClient", "OpenT2TClient.vcxproj", "{45DAA097-9C76-4841-AB41-FD3F6DEA640E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

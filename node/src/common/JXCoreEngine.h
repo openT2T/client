@@ -1,4 +1,7 @@
 
+namespace OpenT2T
+{
+
 class JXCoreEngine : public INodeEngine
 {
 public:
@@ -18,3 +21,5 @@ public:
         const char* scriptFunctionName,
         std::function<void(const char* argsJson)> callback) override;
 };
+
+}
