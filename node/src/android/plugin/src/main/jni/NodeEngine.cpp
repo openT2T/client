@@ -5,11 +5,10 @@
 #include <jni.h>
 #include <android/log.h>
 
+#include "Log.h"
 #include "INodeEngine.h"
 #include "JXCoreEngine.h"
 #include "JniUtils.h"
-
-#define ALOG_TAG "OpenT2T.NodeEngine.JNI"
 
 void setNodeEngine(JNIEnv* env, jobject thiz, INodeEngine* nodeEngine)
 {
@@ -39,10 +38,41 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     return JNI_VERSION_1_4;
 }
 
+JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_staticInit(
+        JNIEnv* env, jobject thiz)
+{
+    SetLogLevel(LogSeverity::Verbose);
+    SetLogHandler([](LogSeverity severity, const char* message)
+    {
+        const char* logTag = "OpenT2T.NodeEngine.JNI"
+
+        int androidLogLevel;
+        switch (severity)
+        {
+            case LogSeverity::Error:
+                androidLogLevel = ANDROID_LOG_ERROR;
+                break;
+            case LogSeverity::Warning:
+                androidLogLevel = ANDROID_LOG_WARN;
+                break;
+            case LogSeverity::Info:
+                androidLogLevel = ANDROID_LOG_INFO;
+                break;
+            case LogSeverity::Verbose:
+            case LogSeverity::Trace:
+            default:
+                androidLogLevel = ANDROID_LOG_ERROR;
+                break;
+        }
+
+        __android_log_print(androidLogLevel, logTag, message);
+    });
+}
+
 JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_init(
         JNIEnv* env, jobject thiz)
 {
-    log_debug("init()");
+    LogTrace("init()");
 
     INodeEngine* nodeEngine = new JXCoreEngine();
     setNodeEngine(env, thiz, nodeEngine);
@@ -51,7 +81,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_init(
 JNIEXPORT jstring JNICALL Java_io_opent2t_NodeEngine_getMainScriptFileName(
     JNIEnv* env, jobject thiz)
 {
-    log_debug("getMainScriptFileName()");
+    LogTrace("getMainScriptFileName()");
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine == nullptr)
@@ -79,7 +109,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_defineScriptFile(
     const char* scriptFileNameChars = env->GetStringUTFChars(scriptFileName, JNI_FALSE);
     const char* scriptCodeChars = env->GetStringUTFChars(scriptCode, JNI_FALSE);
 
-    log_debug("defineScriptFile(\"%s\", \"...\")", scriptFileNameChars);
+    LogTrace("defineScriptFile(\"%s\", \"...\")", scriptFileNameChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
@@ -103,7 +133,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
 {
     const char* workingDirectoryChars = env->GetStringUTFChars(workingDirectory, JNI_FALSE);
 
-    log_debug("start(\"%s\")", workingDirectoryChars);
+    LogTrace("start(\"%s\")", workingDirectoryChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
@@ -134,7 +164,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
 JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_stop(
     JNIEnv* env, jobject thiz, jobject promise)
 {
-    log_debug("stop()");
+    LogTrace("stop()");
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
@@ -165,7 +195,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
 {
     const char* scriptCodeChars = env->GetStringUTFChars(scriptCode, JNI_FALSE);
 
-    log_debug("callScript(\"%s\")", scriptCodeChars);
+    LogTrace("callScript(\"%s\")", scriptCodeChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
@@ -200,7 +230,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
 {
     const char* scriptFunctionNameChars = env->GetStringUTFChars(scriptFunctionName, JNI_FALSE);
 
-    log_debug("registerCallFromScript(\"%s\")", scriptFunctionNameChars);
+    LogTrace("registerCallFromScript(\"%s\")", scriptFunctionNameChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)

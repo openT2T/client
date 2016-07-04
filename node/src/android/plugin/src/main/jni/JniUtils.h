@@ -1,9 +1,4 @@
 
-#define log_debug(...) __android_log_print(ANDROID_LOG_DEBUG, ALOG_TAG, __VA_ARGS__)
-#define log_info(...) __android_log_print(ANDROID_LOG_INFO, ALOG_TAG, __VA_ARGS__)
-#define log_warn(...)  __android_log_print(ANDROID_LOG_WARN, ALOG_TAG, __VA_ARGS__)
-#define log_error(...) __android_log_print(ANDROID_LOG_ERROR, ALOG_TAG, __VA_ARGS__)
-
 void resolvePromise(JNIEnv* env, jobject promise, jobject result)
 {
     jclass promiseClass = env->GetObjectClass(promise);

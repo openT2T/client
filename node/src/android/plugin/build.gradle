@@ -12,7 +12,7 @@ android {
         ndk {
             moduleName "NodeEngine"
             stl "c++_static"
-            ldLibs "log", "z", "m"
+            ldLibs "log", "z", "m", "atomic"
             cFlags "-I../../common -I../../external"
         }
     }

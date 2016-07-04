@@ -1,5 +1,7 @@
 package io.opent2t;
 
-public interface NodeCallListener {
+import java.util.EventListener;
+
+public interface NodeCallListener extends EventListener {
     void functionCalled(NodeCallEvent e);
 }

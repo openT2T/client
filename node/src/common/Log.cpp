@@ -6,8 +6,8 @@
 
 using namespace OpenT2T;
 
-static std::function<void(LogSeverity severity, const char* message)> _logHandler;
-static LogSeverity _severityLevel = LogSeverity::None;
+std::function<void(LogSeverity severity, const char* message)> _logHandler;
+LogSeverity _severityLevel = LogSeverity::None;
 
 void SetLogHandler(std::function<void(LogSeverity severity, const char* message)> logHandler)
 {
@@ -19,7 +19,7 @@ void SetLogLevel(LogSeverity severityLevel)
     _severityLevel = severityLevel;
 }
 
-void Log(LogSeverity severity, const char* message)
+void details::LogMessage(LogSeverity severity, const char* message)
 {
     if (severity <= _severityLevel && _logHandler)
     {
@@ -27,14 +27,19 @@ void Log(LogSeverity severity, const char* message)
     }
 }
 
-template<class... Args>
-void Log(LogSeverity severity, const char* format, Args&&... args)
+void details::LogFormattedMessage(LogSeverity severity, const char* format, ...)
 {
+    va_list va_args;
+    va_start(va_args, format);
+
     if (severity <= _severityLevel && _logHandler)
     {
-        int length = vsnprintf(nullptr, 0, format, std::forward<Args>(args)...);
+        int length = vsnprintf(nullptr, 0, format, va_args);
         std::vector<char> buf(length + 1);
-        vsnprintf(buf.data(), length + 1, std::forward<Args>(args)...);
+        vsnprintf(buf.data(), length + 1, format, va_args);
         _logHandler(severity, buf.data());
     }
+
+    va_end(va_args);
 }
+

@@ -8,9 +8,13 @@ import java.util.concurrent.Future;
 public class NodeEngine {
     private static final String TAG = "OpenT2T.NodeEngine";
 
-    static {
+    static
+    {
         System.loadLibrary("NodeEngine");
+        NodeEngine.staticInit();
     }
+
+    private static native void staticInit();
 
     /**
      * Native pointer to the node engine instance.
@@ -59,7 +63,7 @@ public class NodeEngine {
         this.callFromScriptListeners.add(listener);
     }
 
-    public synchronized void removeCallFromScriptEventListener(NodeCallListener listener) {
+    public synchronized void removeCallFromScriptListener(NodeCallListener listener) {
         this.callFromScriptListeners.remove(listener);
     }
 
