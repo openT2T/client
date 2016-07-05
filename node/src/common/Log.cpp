@@ -1,25 +1,27 @@
 
 #include <functional>
 #include <vector>
+#include <cstdarg>
 
 #include "Log.h"
 
 using namespace OpenT2T;
 
-std::function<void(LogSeverity severity, const char* message)> _logHandler;
-LogSeverity _severityLevel = LogSeverity::None;
 
-void SetLogHandler(std::function<void(LogSeverity severity, const char* message)> logHandler)
+static std::function<void(LogSeverity severity, const char* message)> _logHandler;
+static LogSeverity _severityLevel = LogSeverity::None;
+
+void OpenT2T::SetLogHandler(std::function<void(LogSeverity severity, const char* message)> logHandler)
 {
     _logHandler = logHandler;
 }
 
-void SetLogLevel(LogSeverity severityLevel)
+void OpenT2T::SetLogLevel(LogSeverity severityLevel)
 {
     _severityLevel = severityLevel;
 }
 
-void details::LogMessage(LogSeverity severity, const char* message)
+void OpenT2T::details::LogMessage(LogSeverity severity, const char* message)
 {
     if (severity <= _severityLevel && _logHandler)
     {
@@ -27,7 +29,7 @@ void details::LogMessage(LogSeverity severity, const char* message)
     }
 }
 
-void details::LogFormattedMessage(LogSeverity severity, const char* format, ...)
+void OpenT2T::details::LogFormattedMessage(LogSeverity severity, const char* format, ...)
 {
     va_list va_args;
     va_start(va_args, format);
@@ -42,4 +44,3 @@ void details::LogFormattedMessage(LogSeverity severity, const char* format, ...)
 
     va_end(va_args);
 }
-

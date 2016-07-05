@@ -27,6 +27,7 @@ ipch/
 project.lock.json
 *.VC.*db
 packages/
+*.*proj.user
 
 # Node.js installed modules
 /node_modules

@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "WinrtUtils.h"
+#include "Log.h"
 #include "INodeEngine.h"
 #include "NodeEngine.h"
 #include "JXCoreEngine.h"
@@ -7,6 +8,23 @@
 using namespace Platform;
 using namespace Windows::Foundation;
 using namespace OpenT2T;
+
+static struct _init
+{
+    _init()
+    {
+#if DEBUG
+        SetLogLevel(LogSeverity::Trace);
+#else
+        SetLogLevel(LogSeverity::Info);
+#endif
+
+        SetLogHandler([](LogSeverity severity, const char* message)
+        {
+            ::OutputDebugStringA(message);
+        });
+    }
+} staticInit;
 
 
 NodeCallEvent::NodeCallEvent(String^ functionName, String^ argsJson)
@@ -90,19 +108,28 @@ IAsyncAction^ NodeEngine::StopAsync()
     });
 }
 
-IAsyncAction^ NodeEngine::CallScriptAsync(Platform::String^ scriptCode)
+IAsyncOperation<String^>^ NodeEngine::CallScriptAsync(Platform::String^ scriptCode)
 {
-    return ExceptionsToPlatformExceptions<IAsyncAction^>([=]()
+    return ExceptionsToPlatformExceptions<IAsyncOperation<String^>^>([=]()
     {
-        concurrency::task_completion_event<void> tce;
-        concurrency::task<void> task(tce);
+        concurrency::task_completion_event<String^> tce;
+        concurrency::task<String^> task(tce);
 
-        this->node->CallScript(PlatformStringToString(scriptCode).c_str(), [tce](std::exception_ptr ex)
+        this->node->CallScript(PlatformStringToString(scriptCode).c_str(),
+            [tce](const char* resultJson, std::exception_ptr ex)
         {
-            ex ? tce.set_exception(ex) : tce.set();
+            if (ex == nullptr)
+            {
+                String^ resultJsonString = StringToPlatformString(resultJson);
+                tce.set(resultJsonString);
+            }
+            else
+            {
+                tce.set_exception(ex);
+            }
         });
 
-        return TaskToAsyncAction(task);
+        return TaskToAsyncOperation(task);
     });
 }
 

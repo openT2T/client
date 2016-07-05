@@ -46,7 +46,12 @@ using namespace OpenT2T;
 
 + (void) initialize
 {
+#if DEBUG
     SetLogLevel(LogSeverity::Trace);
+#else
+    SetLogLevel(LogSeverity::Info);
+#endif
+
     SetLogHandler([](LogSeverity severity, const char* message)
     {
         NSLog(@"%s", message);
@@ -140,16 +145,17 @@ using namespace OpenT2T;
 }
 
 - (void) callScriptAsync: (NSString*) scriptCode
-                    then: (void(^)()) success
+                  result: (void(^)(NSString*)) success
                    catch: (void(^)(NSError*)) failure
 {
     try
     {
-        _node->Start([scriptCode UTF8String], [=](std::exception_ptr ex)
+        _node->Start([scriptCode UTF8String], [=](const char* resultJson, std::exception_ptr ex)
         {
             if (ex == nullptr)
             {
-                success();
+                NSString* resultJsonString = [NSString stringWithUTF8String: resultJson];
+                success(resultJsonString);
             }
             else
             {

@@ -35,10 +35,12 @@ void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
     callback(nullptr);
 }
 
-void JXCoreEngine::CallScript(const char* scriptCode, std::function<void(std::exception_ptr ex)> callback)
+void JXCoreEngine::CallScript(
+    const char* scriptCode,
+    std::function<void(const char* resultJson, std::exception_ptr ex)> callback)
 {
     LogTrace("JXCoreEngine::CallScript(\"%s\")", scriptCode);
-    callback(nullptr);
+    callback("null", nullptr);
 }
 
 void JXCoreEngine::RegisterCallFromScript(

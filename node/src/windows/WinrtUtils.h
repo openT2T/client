@@ -86,3 +86,22 @@ Windows::Foundation::IAsyncAction^ TaskToAsyncAction(concurrency::task<void> tas
         });
     });
 }
+
+template <typename T>
+Windows::Foundation::IAsyncOperation<T>^ TaskToAsyncOperation(concurrency::task<T> task)
+{
+    return concurrency::create_async([task]()
+    {
+        return task.then([](concurrency::task<T> completedTask)
+        {
+            try
+            {
+                return completedTask.get();
+            }
+            catch (...)
+            {
+                throw ExceptionToPlatformException(std::current_exception());
+            }
+        });
+    });
+}

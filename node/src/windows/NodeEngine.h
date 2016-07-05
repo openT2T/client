@@ -40,7 +40,7 @@ namespace OpenT2T
 
         Windows::Foundation::IAsyncAction^ StopAsync();
 
-        Windows::Foundation::IAsyncAction^ CallScriptAsync(Platform::String^ scriptCode);
+        Windows::Foundation::IAsyncOperation<Platform::String^>^ CallScriptAsync(Platform::String^ scriptCode);
 
         void RegisterCallFromScript(Platform::String^ scriptFunctionName);
 

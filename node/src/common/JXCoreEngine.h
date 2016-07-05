@@ -15,7 +15,9 @@ public:
 
     void Stop(std::function<void(std::exception_ptr ex)> callback) override;
 
-    void CallScript(const char* scriptCode, std::function<void(std::exception_ptr ex)> callback) override;
+    void CallScript(
+        const char* scriptCode,
+        std::function<void(const char* resultJson, std::exception_ptr ex)> callback) override;
 
     void RegisterCallFromScript(
         const char* scriptFunctionName,

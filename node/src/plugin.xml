@@ -8,7 +8,7 @@
     <keywords>opent2t</keywords>
     <license></license>
 
-    <assembly name="OpenT2T" js-target="opent2t">
+    <assembly name="OpenT2TPlugin" js-target="opent2t">
     </assembly>
 
     <platform name="android">

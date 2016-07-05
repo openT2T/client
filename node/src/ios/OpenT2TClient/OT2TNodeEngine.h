@@ -35,7 +35,7 @@ typedef void (^OT2TNodeCallListener)(NSObject* sender, OT2TNodeCallEvent* e);
                  catch: (void(^)(NSError*)) failure;
 
 - (void) callScriptAsync: (NSString*) scriptCode
-                    then: (void(^)()) success
+                  result: (void(^)(NSString*)) success
                    catch: (void(^)(NSError*)) failure;
 
 - (void) registerCallFromScript: (NSString*) scriptFunctionName

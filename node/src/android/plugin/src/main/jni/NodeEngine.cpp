@@ -41,7 +41,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_staticInit(
         JNIEnv* env, jobject thiz)
 {
-    SetLogLevel(LogSeverity::Verbose);
+    SetLogLevel(BuildConfig.DEBUG ? LogSeverity::Trace : LogSeverity.Info);
+
     SetLogHandler([](LogSeverity severity, const char* message)
     {
         const char* logTag = "OpenT2T.NodeEngine.JNI"
@@ -202,11 +203,13 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
     {
         try
         {
-            nodeEngine->CallScript(scriptCodeChars, [](std::exception_ptr ex)
+            nodeEngine->CallScript(scriptCodeChars,
+                [](const char* resultJson, std::exception_ptr ex)
             {
                 if (ex == nullptr)
                 {
-                    resolvePromise(env, promise, nullptr);
+                    jstring resultJsonString = env->NewStringUTF(resultJson);
+                    resolvePromise(env, promise, resultJsonString);
                 }
                 else
                 {

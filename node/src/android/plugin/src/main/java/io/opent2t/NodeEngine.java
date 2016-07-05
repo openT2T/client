@@ -49,8 +49,8 @@ public class NodeEngine {
 
     private native void stop(Promise promise);
 
-    public Future<Void> callScriptAsync(String scriptCode) {
-        Promise<Void> promise = new Promise<Void>();
+    public Future<String> callScriptAsync(String scriptCode) {
+        Promise<String> promise = new Promise<String>();
         this.callScript(promise, scriptCode);
         return promise;
     }

@@ -10,12 +10,14 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="NodeEngine.cpp" />
     <ClCompile Include="..\common\JXCoreEngine.cpp" />
+    <ClCompile Include="..\common\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="NodeEngine.h" />
     <ClInclude Include="..\common\INodeEngine.h" />
     <ClInclude Include="..\common\JXCoreEngine.h" />
-    <ClInclude Include="Utils.h" />
+    <ClInclude Include="..\common\Log.h" />
+    <ClInclude Include="WinrtUtils.h" />
   </ItemGroup>
 </Project>
