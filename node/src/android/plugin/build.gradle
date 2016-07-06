@@ -13,7 +13,7 @@ android {
             moduleName "NodeEngine"
             stl "c++_static"
             ldLibs "log", "z", "m", "atomic"
-            cFlags "-I../../common -I../../external"
+            cFlags "-I../../common -I../../external -fexceptions"
         }
     }
     sourceSets {

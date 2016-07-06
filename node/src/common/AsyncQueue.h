@@ -23,7 +23,7 @@ class IQueueItemHandler
 {
 public:
     virtual void OnStarted() = 0;
-    virtual void OnProcessQueueItem(_In_ QueueItem& item) = 0;
+    virtual void OnProcessQueueItem(QueueItem& item) = 0;
     virtual void OnStopped() = 0;
 };
 
@@ -60,7 +60,7 @@ public:
         Uninitialize();
     }
 
-    void Initialize(_In_ const std::shared_ptr<IQueueItemHandler<QueueItem>>& handler)
+    void Initialize(const std::shared_ptr<IQueueItemHandler<QueueItem>>& handler)
     {
         std::lock_guard<std::mutex> lock(_mutex);
 
@@ -127,7 +127,7 @@ public:
     // Pushes another item onto the queue for processing later on the worker thread.
     // Returns false and no-ops if the queue is not initialized.
     template <typename QueueItemType>
-    bool Push(_In_ QueueItemType&& item)
+    bool Push(QueueItemType&& item)
     {
         bool queueWasEmpty = false;
 

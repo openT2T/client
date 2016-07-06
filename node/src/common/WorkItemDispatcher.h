@@ -65,7 +65,7 @@ private:
         ~QueueItemHandler() {}
 
         void OnStarted() override {}
-        void OnProcessQueueItem(_In_ WorkItemFunctorType& workItemFunctor) override { workItemFunctor(); }
+        void OnProcessQueueItem(WorkItemFunctorType& workItemFunctor) override { workItemFunctor(); }
         void OnStopped() override {}
     };
 
