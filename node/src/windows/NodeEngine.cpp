@@ -3,6 +3,8 @@
 #include "Log.h"
 #include "INodeEngine.h"
 #include "NodeEngine.h"
+#include "AsyncQueue.h"
+#include "WorkItemDispatcher.h"
 #include "JXCoreEngine.h"
 
 using namespace Platform;

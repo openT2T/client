@@ -1,15 +1,31 @@
 
 #include <string>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <unordered_map>
 #include <functional>
+
+#include "jxcore/jx.h"
 
 #include "Log.h"
 #include "INodeEngine.h"
+#include "AsyncQueue.h"
+#include "WorkItemDispatcher.h"
 #include "JXCoreEngine.h"
 
 using namespace OpenT2T;
 
+std::once_flag JXCoreEngine::_initOnce;
+
 JXCoreEngine::JXCoreEngine()
 {
+    _dispatcher.Initialize();
+}
+
+JXCoreEngine::~JXCoreEngine()
+{
+    _dispatcher.Shutdown();
 }
 
 const char* JXCoreEngine::GetMainScriptFileName()
@@ -21,18 +37,53 @@ const char* JXCoreEngine::GetMainScriptFileName()
 void JXCoreEngine::DefineScriptFile(const char* scriptFileName, const char* scriptCode)
 {
     LogTrace("JXCoreEngine::DefineScriptFile(\"%s\", \"...\")", scriptFileName);
+
+    _initialScriptMap.emplace(scriptFileName, scriptCode);
 }
 
 void JXCoreEngine::Start(const char* workingDirectory, std::function<void(std::exception_ptr ex)> callback)
 {
     LogTrace("JXCoreEngine::Start(\"%s\")", workingDirectory);
-    callback(nullptr);
+
+    _dispatcher.Dispatch([=]()
+    {
+        std::call_once(_initOnce, [=]()
+        {
+            JX_InitializeOnce(workingDirectory);
+        });
+
+        JX_InitializeNewEngine();
+
+        for (const std::pair<std::string, std::string>& scriptEntry : _initialScriptMap)
+        {
+            if (scriptEntry.first == this->GetMainScriptFileName())
+            {
+                JX_DefineMainFile(scriptEntry.second.c_str());
+            }
+            else
+            {
+                JX_DefineFile(scriptEntry.first.c_str(), scriptEntry.second.c_str());
+            }
+        }
+
+        JX_StartEngine();
+
+        LogVerbose("Started JXCore engine.");
+        callback(nullptr);
+    });
 }
 
 void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
 {
     LogTrace("JXCoreEngine::Stop()");
-    callback(nullptr);
+
+    _dispatcher.Dispatch([=]()
+    {
+        JX_StopEngine();
+
+        LogVerbose("Stopped JXCore engine.");
+        callback(nullptr);
+    });
 }
 
 void JXCoreEngine::CallScript(

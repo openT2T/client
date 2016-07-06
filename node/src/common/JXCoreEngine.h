@@ -6,6 +6,7 @@ class JXCoreEngine : public INodeEngine
 {
 public:
     JXCoreEngine();
+    ~JXCoreEngine();
 
     const char* GetMainScriptFileName() override;
 
@@ -22,6 +23,11 @@ public:
     void RegisterCallFromScript(
         const char* scriptFunctionName,
         std::function<void(const char* argsJson)> callback) override;
+
+private:
+    static std::once_flag _initOnce;
+    WorkItemDispatcher _dispatcher;
+    std::unordered_map<std::string, std::string> _initialScriptMap;
 };
 
 }
