@@ -1,34 +1,85 @@
-apply plugin: 'com.android.library'
+apply plugin: 'com.android.model.library'
+
+model {
 
 android {
     compileSdkVersion 19
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 23
+        minSdkVersion.apiLevel 19
+        targetSdkVersion.apiLevel 23
         versionCode 1
         versionName "1.0"
-        ndk {
-            moduleName "NodeEngine"
-            stl "c++_static"
-            ldLibs "log", "z", "m", "atomic"
-            cFlags "-I../../common -I../../external -fexceptions"
-        }
     }
-    sourceSets {
+
+    ndk {
+        moduleName "NodeEngine"
+        stl "c++_static"
+        ldLibs.add("log")
+        ldLibs.add("z")
+        ldLibs.add("m")
+        ldLibs.add("atomic")
+        cppFlags.add("-fexceptions")
+        cppFlags.add("-I" + file("../../common"))
+        cppFlags.add("-I" + file("../../external"))
+    }
+
+    sources {
         main {
-            jni.srcDirs = ['../../common', 'jni']
+            jni {
+                source {
+                    srcDir "../../common"
+                }
+                dependencies {
+                    library "libjxcore"
+                }
+            }
         }
     }
+
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            useProguard false
+            proguardFiles.add(file('proguard-rules.pro'))
+        }
+    }
+
+    productFlavors {
+        create("fat") {
+            ndk {
+                abiFilters.add("armeabi")
+                abiFilters.add("x86")
+            }
+        }
+        create("arm") {
+            ndk {
+                abiFilters.add("armeabi")
+            }
+        }
+        create("x86") {
+            ndk {
+                abiFilters.add("x86")
+            }
         }
     }
 }
 
+repositories {
+    libs(PrebuiltLibraries) {
+        libjxcore {
+            binaries.withType(SharedLibraryBinary) {
+                sharedLibraryFile = file(
+                    "../../external/jxcore/lib/Android/" +
+                    "${targetPlatform.getName()}/libjxcore.so")
+            }
+        }
+    }
+}
+
+}
+
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile fileTree(dir: "libs", include: ["*.jar"])
 }

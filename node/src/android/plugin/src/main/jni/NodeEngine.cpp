@@ -1,14 +1,26 @@
 
-#include <functional>
+#include <cstdlib>
 #include <exception>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <queue>
 #include <stdexcept>
+#include <string>
+#include <thread>
+#include <unordered_map>
+
 #include <jni.h>
 #include <android/log.h>
 
 #include "Log.h"
+#include "AsyncQueue.h"
+#include "WorkItemDispatcher.h"
 #include "INodeEngine.h"
 #include "JXCoreEngine.h"
 #include "JniUtils.h"
+
+using namespace OpenT2T;
 
 void setNodeEngine(JNIEnv* env, jobject thiz, INodeEngine* nodeEngine)
 {
@@ -25,7 +37,9 @@ INodeEngine* getNodeEngine(JNIEnv* env, jobject thiz)
 
     if (nodeEngine == nullptr)
     {
-        env->ThrowNew(env->FindClass("java/lang/IllegalStateException"));
+        env->ThrowNew(
+                env->FindClass("java/lang/IllegalStateException"),
+                "Node engine not initialized");
     }
 
     return nodeEngine;
@@ -41,11 +55,15 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_staticInit(
         JNIEnv* env, jobject thiz)
 {
-    SetLogLevel(BuildConfig.DEBUG ? LogSeverity::Trace : LogSeverity.Info);
+#if DEBUG
+    SetLogLevel(LogSeverity::Trace);
+#else
+    SetLogLevel(LogSeverity::Info);
+#endif
 
     SetLogHandler([](LogSeverity severity, const char* message)
     {
-        const char* logTag = "OpenT2T.NodeEngine.JNI"
+        const char* logTag = "OpenT2T.NodeEngine.JNI";
 
         int androidLogLevel;
         switch (severity)
@@ -98,7 +116,7 @@ JNIEXPORT jstring JNICALL Java_io_opent2t_NodeEngine_getMainScriptFileName(
     }
     catch (...)
     {
-        env->Throw(exceptionToJavaException(std::current_exception());
+        env->Throw(exceptionToJavaException(env, std::current_exception()));
     }
 
     return mainScriptFileName;
@@ -121,7 +139,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_defineScriptFile(
         }
         catch (...)
         {
-            env->Throw(exceptionToJavaException(std::current_exception());
+            env->Throw(exceptionToJavaException(env, std::current_exception()));
         }
     }
 
@@ -141,7 +159,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
     {
         try
         {
-            nodeEngine->Start(workingDirectoryChars, [](std::exception_ptr ex)
+            nodeEngine->Start(workingDirectoryChars, [=](std::exception_ptr ex)
             {
                 if (ex == nullptr)
                 {
@@ -149,13 +167,16 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
                 }
                 else
                 {
-                    rejectPromise(env, promise, exceptionToJavaException(std::current_exception());
+                    rejectPromise(
+                            env,
+                            promise,
+                            exceptionToJavaException(env, std::current_exception()));
                 }
             });
         }
         catch (...)
         {
-            env->Throw(exceptionToJavaException(std::current_exception());
+            env->Throw(exceptionToJavaException(env, std::current_exception()));
         }
     }
 
@@ -172,7 +193,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_stop(
     {
         try
         {
-            nodeEngine->Stop([](std::exception_ptr ex)
+            nodeEngine->Stop([=](std::exception_ptr ex)
             {
                 if (ex == nullptr)
                 {
@@ -180,13 +201,16 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_stop(
                 }
                 else
                 {
-                    rejectPromise(env, promise, exceptionToJavaException(std::current_exception());
+                    rejectPromise(
+                            env,
+                            promise,
+                            exceptionToJavaException(env, std::current_exception()));
                 }
             });
         }
         catch (...)
         {
-            env->Throw(exceptionToJavaException(std::current_exception());
+            env->Throw(exceptionToJavaException(env, std::current_exception()));
         }
     }
 }
@@ -204,7 +228,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
         try
         {
             nodeEngine->CallScript(scriptCodeChars,
-                [](const char* resultJson, std::exception_ptr ex)
+                [=](const char* resultJson, std::exception_ptr ex)
             {
                 if (ex == nullptr)
                 {
@@ -213,13 +237,16 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
                 }
                 else
                 {
-                    rejectPromise(env, promise, exceptionToJavaException(std::current_exception());
+                    rejectPromise(
+                            env,
+                            promise,
+                            exceptionToJavaException(env, std::current_exception()));
                 }
             });
         }
         catch (...)
         {
-            env->Throw(exceptionToJavaException(std::current_exception());
+            env->Throw(exceptionToJavaException(env, std::current_exception()));
         }
     }
 
@@ -246,12 +273,13 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
                 jmethodID raiseCallFromScriptMethod = env->GetMethodID(
                     thisClass, "raiseCallFromScript", "(Ljava/lang/String;Ljava/lang/String;)V");
                 jstring argsJsonString = env->NewStringUTF(argsJson);
-                env->CallVoidMethod(thiz, raiseCallFromScriptMethod, scriptFunctionName, argsJsonString);
+                env->CallVoidMethod(
+                        thiz, raiseCallFromScriptMethod, scriptFunctionName, argsJsonString);
             });
         }
         catch (...)
         {
-            env->Throw(exceptionToJavaException(std::current_exception());
+            env->Throw(exceptionToJavaException(env, std::current_exception()));
         }
     }
 

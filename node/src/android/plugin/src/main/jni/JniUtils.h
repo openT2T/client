@@ -64,6 +64,6 @@ jthrowable exceptionToJavaException(JNIEnv* env, std::exception_ptr ex)
     }
     catch (...)
     {
-        return newJavaException(env, "java/lang/Exception");
+        return newJavaException(env, "java/lang/Exception", nullptr);
     }
 }
