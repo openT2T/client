@@ -28,6 +28,7 @@ private:
     static std::once_flag _initOnce;
     WorkItemDispatcher _dispatcher;
     std::unordered_map<std::string, std::string> _initialScriptMap;
+    bool _started;
 };
 
 }

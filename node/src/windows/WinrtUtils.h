@@ -46,6 +46,10 @@ Platform::Exception^ ExceptionToPlatformException(std::exception_ptr ex)
     {
         return ref new Platform::InvalidCastException(StringToPlatformString(stdex.what()));
     }
+    catch (const std::logic_error& stdex)
+    {
+        return Platform::Exception::CreateException(E_NOT_VALID_STATE, StringToPlatformString(stdex.what()));
+    }
     catch (const std::exception& stdex)
     {
         return ref new Platform::FailureException(StringToPlatformString(stdex.what()));

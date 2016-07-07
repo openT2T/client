@@ -53,6 +53,9 @@ namespace OpenT2T.Test
             currentTest = "new NodeEngine()";
             Expect(() => node = new NodeEngine());
 
+            currentTest = "NodeEngine.StartAsync()";
+            Expect(() => node.StartAsync("."));
+
             currentTest = "NodeEngine.CallScriptAsync()";
             string message = "\"Hello from node!\"";
             await ExpectResultAsync(message, () => node.CallScriptAsync("function () { return " + message + "; }()"));

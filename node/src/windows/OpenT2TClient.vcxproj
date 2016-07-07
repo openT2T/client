@@ -38,6 +38,8 @@
     <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <PlatformName Condition="'$(Platform)'=='Win32'">x86</PlatformName>
+    <PlatformName Condition="'$(Platform)'!='Win32'">$(Platform)</PlatformName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -245,6 +247,10 @@
     <ClInclude Include="WinrtUtils.h" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\external\jxcore\lib\Windows\$(PlatformName)\jx.dll">
+      <Link>jx.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <ClCompile Include="..\common\JXCoreEngine.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

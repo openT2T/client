@@ -28,6 +28,11 @@ void ExceptionToNSError(std::exception_ptr ex, NSError** outError)
             NSDictionary* userInfo = @{NSLocalizedDescriptionKey : [NSString stringWithUTF8String: stdex.what()]};
             *outError = [[NSError alloc] initWithDomain: @"OpenT2T" code: 1 userInfo: userInfo];
         }
+        catch (const std::logic_error& stdex)
+        {
+            NSDictionary* userInfo = @{NSLocalizedDescriptionKey : [NSString stringWithUTF8String: stdex.what()]};
+            *outError = [[NSError alloc] initWithDomain: @"OpenT2T" code: 1 userInfo: userInfo];
+        }
         catch (const std::exception& stdex)
         {
             NSDictionary* userInfo = @{NSLocalizedDescriptionKey : [NSString stringWithUTF8String: stdex.what()]};
