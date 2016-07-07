@@ -97,31 +97,6 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_init(
     setNodeEngine(env, thiz, nodeEngine);
 }
 
-JNIEXPORT jstring JNICALL Java_io_opent2t_NodeEngine_getMainScriptFileName(
-    JNIEnv* env, jobject thiz)
-{
-    LogTrace("getMainScriptFileName()");
-
-    INodeEngine* nodeEngine = getNodeEngine(env, thiz);
-    if (nodeEngine == nullptr)
-    {
-        return nullptr;
-    }
-
-    jstring mainScriptFileName = nullptr;
-    try
-    {
-        const char* mainScriptFileNameChars = nodeEngine->GetMainScriptFileName();
-        mainScriptFileName = env->NewStringUTF(mainScriptFileNameChars);
-    }
-    catch (...)
-    {
-        env->Throw(exceptionToJavaException(env, std::current_exception()));
-    }
-
-    return mainScriptFileName;
-}
-
 JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_defineScriptFile(
     JNIEnv* env, jobject thiz, jstring scriptFileName, jstring scriptCode)
 {
@@ -228,11 +203,11 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
         try
         {
             nodeEngine->CallScript(scriptCodeChars,
-                [=](const char* resultJson, std::exception_ptr ex)
+                [=](std::string resultJson, std::exception_ptr ex)
             {
                 if (ex == nullptr)
                 {
-                    jstring resultJsonString = env->NewStringUTF(resultJson);
+                    jstring resultJsonString = env->NewStringUTF(resultJson.c_str());
                     resolvePromise(env, promise, resultJsonString);
                 }
                 else
@@ -267,12 +242,12 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
     {
         try
         {
-            nodeEngine->RegisterCallFromScript(scriptFunctionNameChars, [=](const char* argsJson)
+            nodeEngine->RegisterCallFromScript(scriptFunctionNameChars, [=](std::string argsJson)
             {
                 jclass thisClass = env->GetObjectClass(thiz);
                 jmethodID raiseCallFromScriptMethod = env->GetMethodID(
                     thisClass, "raiseCallFromScript", "(Ljava/lang/String;Ljava/lang/String;)V");
-                jstring argsJsonString = env->NewStringUTF(argsJson);
+                jstring argsJsonString = env->NewStringUTF(argsJson.c_str());
                 env->CallVoidMethod(
                         thiz, raiseCallFromScriptMethod, scriptFunctionName, argsJsonString);
             });

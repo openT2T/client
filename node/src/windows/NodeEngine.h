@@ -29,11 +29,6 @@ namespace OpenT2T
         NodeEngine();
         virtual ~NodeEngine();
 
-        property Platform::String^ MainScriptFileName
-        {
-            Platform::String^ get();
-        }
-
         void DefineScriptFile(Platform::String^ scriptFileName, Platform::String^ scriptCode);
 
         Windows::Foundation::IAsyncAction^ StartAsync(Platform::String^ workingDirectory);

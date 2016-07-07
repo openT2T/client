@@ -69,19 +69,15 @@ using namespace OpenT2T;
     return self;
 }
 
-- (NSString*) mainScriptFileName
-{
-    const char* mainScriptFileNameChars = _node->GetMainScriptFileName();
-    return [NSString stringWithUTF8String: mainScriptFileNameChars];
-}
-
 - (void) defineScriptFile: (NSString*) scriptFileName
              withContents: (NSString*) scriptCode
                     error: (NSError**) outError
 {
     try
     {
-        _node->DefineScriptFile([scriptFileName UTF8String], [scriptCode UTF8String]);
+        _node->DefineScriptFile(
+            std::string([scriptFileName UTF8String]),
+            std::string([scriptCode UTF8String]));
     }
     catch (...)
     {
@@ -95,7 +91,7 @@ using namespace OpenT2T;
 {
     try
     {
-        _node->Start([workingDirectory UTF8String], [=](std::exception_ptr ex)
+        _node->Start(std::string([workingDirectory UTF8String]), [=](std::exception_ptr ex)
         {
             if (ex == nullptr)
             {
@@ -150,11 +146,12 @@ using namespace OpenT2T;
 {
     try
     {
-        _node->Start([scriptCode UTF8String], [=](const char* resultJson, std::exception_ptr ex)
+        _node->Start(std::string([scriptCode UTF8String]),
+            [=](std::string resultJson, std::exception_ptr ex)
         {
             if (ex == nullptr)
             {
-                NSString* resultJsonString = [NSString stringWithUTF8String: resultJson];
+                NSString* resultJsonString = [NSString stringWithUTF8String: resultJson.c_str()];
                 success(resultJsonString);
             }
             else
@@ -178,9 +175,10 @@ using namespace OpenT2T;
 {
     try
     {
-        _node->RegisterCallFromScript([scriptFunctionName UTF8String], [=](const char* argsJson)
+        _node->RegisterCallFromScript([scriptFunctionName UTF8String], [=](std::string argsJson)
         {
-            [self raiseCallFromScript: scriptFunctionName argsJson: [NSString stringWithUTF8String: argsJson]];
+            [self raiseCallFromScript: scriptFunctionName
+                             argsJson: [NSString stringWithUTF8String: argsJson.c_str()]];
         });
     }
     catch (...)

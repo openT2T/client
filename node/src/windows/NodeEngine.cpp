@@ -26,7 +26,7 @@ static struct _init
             ::OutputDebugStringA(message);
         });
     }
-} staticInit;
+} _staticInit;
 
 
 NodeCallEvent::NodeCallEvent(String^ functionName, String^ argsJson)
@@ -60,21 +60,13 @@ NodeEngine::~NodeEngine()
     delete this->node;
 }
 
-String^ NodeEngine::MainScriptFileName::get()
-{
-    return ExceptionsToPlatformExceptions<String^>([=]()
-    {
-        return StringToPlatformString(this->node->GetMainScriptFileName());
-    });
-}
-
 void NodeEngine::DefineScriptFile(Platform::String^ scriptFileName, Platform::String^ scriptCode)
 {
     ExceptionsToPlatformExceptions<void>([=]()
     {
         this->node->DefineScriptFile(
-            PlatformStringToString(scriptFileName).c_str(),
-            PlatformStringToString(scriptCode).c_str());
+            PlatformStringToString(scriptFileName),
+            PlatformStringToString(scriptCode));
     });
 }
 
@@ -85,7 +77,7 @@ IAsyncAction^ NodeEngine::StartAsync(String^ workingDirectory)
         concurrency::task_completion_event<void> tce;
         concurrency::task<void> task(tce);
 
-        this->node->Start(PlatformStringToString(workingDirectory).c_str(), [tce](std::exception_ptr ex)
+        this->node->Start(PlatformStringToString(workingDirectory), [tce](std::exception_ptr ex)
         {
             ex ? tce.set_exception(ex) : tce.set();
         });
@@ -117,8 +109,8 @@ IAsyncOperation<String^>^ NodeEngine::CallScriptAsync(Platform::String^ scriptCo
         concurrency::task_completion_event<String^> tce;
         concurrency::task<String^> task(tce);
 
-        this->node->CallScript(PlatformStringToString(scriptCode).c_str(),
-            [tce](const char* resultJson, std::exception_ptr ex)
+        this->node->CallScript(PlatformStringToString(scriptCode),
+            [tce](std::string resultJson, std::exception_ptr ex)
         {
             if (ex == nullptr)
             {
@@ -140,7 +132,7 @@ void NodeEngine::RegisterCallFromScript(String^ scriptFunctionName)
     return ExceptionsToPlatformExceptions<void>([=]()
     {
         this->node->RegisterCallFromScript(
-            PlatformStringToString(scriptFunctionName).c_str(), [this, scriptFunctionName](std::string argsJson)
+            PlatformStringToString(scriptFunctionName), [this, scriptFunctionName](std::string argsJson)
         {
             NodeCallEvent^ callEvent = ref new NodeCallEvent(scriptFunctionName, StringToPlatformString(argsJson));
             try
@@ -149,7 +141,7 @@ void NodeEngine::RegisterCallFromScript(String^ scriptFunctionName)
             }
             catch (Exception^ ex)
             {
-                // TODO: log
+                LogWarning("Caught exception from CallFromScript handler: %ws", ex->Message);
             }
         });
     });

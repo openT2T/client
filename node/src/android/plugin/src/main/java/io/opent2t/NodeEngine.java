@@ -29,8 +29,6 @@ public class NodeEngine {
 
     private native void init();
 
-    public native String getMainScriptFileName();
-
     public native void defineScriptFile(String scriptFileName, String scriptCode);
 
     public Future<Void> startAsync(String workingDirectory) {

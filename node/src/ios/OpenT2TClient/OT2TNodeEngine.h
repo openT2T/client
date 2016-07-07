@@ -21,8 +21,6 @@ typedef void (^OT2TNodeCallListener)(NSObject* sender, OT2TNodeCallEvent* e);
 
 - (OT2TNodeEngine*) init;
 
-@property (readonly) NSString* mainScriptFileName;
-
 - (void) defineScriptFile: (NSString*) scriptFileName
              withContents: (NSString*) scriptCode
                     error: (NSError**) outError;

@@ -8,19 +8,58 @@
 #include <thread>
 #include <unordered_map>
 
-#include "jxcore/jx.h"
-
 #include "Log.h"
 #include "INodeEngine.h"
 #include "AsyncQueue.h"
 #include "WorkItemDispatcher.h"
 #include "JXCoreEngine.h"
 
+#include "jxcore/jx.h"
+
 using namespace OpenT2T;
 
 const char* mainScriptFileName = "main.js";
 
-void JXCallCallback(JXValue *result, int argc)
+// This is the "main.js" script for JXCore. It doesn't do much; most execution should be driven by
+// defining additional named script files and directly evaluating script code strings.
+const char* mainScriptCode =
+    // Override console methods to redirect to the console callback.
+    // Note the constants here must correspond to the LogSeverity enum values.
+    "global.console = {"
+        "error: function (msg) { process.natives.jxlog(1, msg); }"
+        "warn: function (msg) { process.natives.jxlog(2, msg); }"
+        "info: function (msg) { process.natives.jxlog(3, msg); }"
+        "log: function (msg) { process.natives.jxlog(4, msg); }"
+    "};";
+
+// Evaluates script code and returns the result (or error) via a callback.
+const char* callScriptFunctionCode =
+    "(function (callId, scriptCode) {"
+        "var resultJson;"
+        "try {"
+            "var result = eval(scriptCode);"
+            "resultJson = JSON.stringify(result);"
+        "} catch (e) {"
+            "process.natives.jxerror(callId, e);"
+            "return;"
+        "}"
+        "process.natives.jxresult(callId, resultJson);"
+    "})";
+
+void JXLogCallback(JXValue* result, int argc)
+{
+    if (argc != 2)
+    {
+        LogWarning("Invalid log callback.");
+        return;
+    }
+
+    LogSeverity severity = static_cast<LogSeverity>(JX_GetInt32(result));
+    const char* message = JX_GetString(result + 1);
+    Log(severity, message);
+}
+
+void JXCallCallback(JXValue* result, int argc)
 {
     if (argc != 2)
     {
@@ -38,10 +77,10 @@ void JXCallCallback(JXValue *result, int argc)
 
     const char* argsJson = JX_GetString(result + 1);
 
-    std::function<void(const char*)>* callbackPtr = reinterpret_cast<std::function<void(const char*)>*>(callId);
+    std::function<void(std::string)>* callbackPtr = reinterpret_cast<std::function<void(std::string)>*>(callId);
     try
     {
-        (*callbackPtr)(argsJson);
+        (*callbackPtr)(argsJson ? std::string(argsJson) : std::string());
     }
     catch (...)
     {
@@ -51,7 +90,7 @@ void JXCallCallback(JXValue *result, int argc)
     // Don't delete this callback function; it may be invoked multiple times.
 }
 
-void JXResultCallback(JXValue *result, int argc)
+void JXResultCallback(JXValue* result, int argc)
 {
     if (argc != 2)
     {
@@ -69,11 +108,11 @@ void JXResultCallback(JXValue *result, int argc)
 
     const char* resultJson = JX_GetString(result + 1);
 
-    std::function<void(const char*, std::exception_ptr)>* callbackPtr =
-        reinterpret_cast<std::function<void(const char*, std::exception_ptr)>*>(callId);
+    std::function<void(std::string, std::exception_ptr)>* callbackPtr =
+        reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
     try
     {
-        (*callbackPtr)(resultJson, nullptr);
+        (*callbackPtr)(resultJson ? std::string(resultJson) : std::string(), nullptr);
     }
     catch (...)
     {
@@ -83,7 +122,7 @@ void JXResultCallback(JXValue *result, int argc)
     delete callbackPtr;
 }
 
-void JXErrorCallback(JXValue *result, int argc)
+void JXErrorCallback(JXValue* result, int argc)
 {
     if (argc != 2)
     {
@@ -99,13 +138,14 @@ void JXErrorCallback(JXValue *result, int argc)
         return;
     }
 
+    // Get the message property from the JavaScript error object (2nd argument), if available.
     JXValue errorMessageValue;
     JX_New(&errorMessageValue);
     JX_GetNamedProperty(result + 1, "message", &errorMessageValue);
     const char* errorMessage = JX_GetString(&errorMessageValue);
 
-    std::function<void(const char*, std::exception_ptr)>* callbackPtr =
-        reinterpret_cast<std::function<void(const char*, std::exception_ptr)>*>(callId);
+    std::function<void(std::string, std::exception_ptr) > * callbackPtr =
+        reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
     try
     {
         throw (errorMessage ? std::runtime_error(errorMessage) : std::runtime_error("Unknown script error."));
@@ -122,6 +162,7 @@ void JXErrorCallback(JXValue *result, int argc)
         }
     }
 
+    JX_Free(&errorMessageValue);
     delete callbackPtr;
 }
 
@@ -134,7 +175,9 @@ inline void LogErrorAndThrow(const char* message)
     throw std::logic_error(message);
 }
 
-JXCoreEngine::JXCoreEngine()
+JXCoreEngine::JXCoreEngine() :
+    _started(false),
+    _callScriptFunction(nullptr)
 {
     _dispatcher.Initialize();
 }
@@ -144,46 +187,37 @@ JXCoreEngine::~JXCoreEngine()
     _dispatcher.Shutdown();
 }
 
-const char* JXCoreEngine::GetMainScriptFileName()
+void JXCoreEngine::DefineScriptFile(std::string scriptFileName, std::string scriptCode)
 {
-    LogTrace("JXCoreEngine::GetMainScriptFileName()");
+    LogTrace("JXCoreEngine::DefineScriptFile(\"%s\", \"...\")", scriptFileName.c_str());
 
-    return mainScriptFileName;
-}
+    if (scriptFileName == mainScriptFileName)
+    {
+        throw new std::invalid_argument("Invalid script file name: 'main.js' is a reserved name.");
+    }
 
-void JXCoreEngine::DefineScriptFile(const char* scriptFileName, const char* scriptCode)
-{
-    LogTrace("JXCoreEngine::DefineScriptFile(\"%s\", \"...\")", scriptFileName);
-
-    std::string scriptFileNameString(scriptFileName);
-    std::string scriptCodeString(scriptCode);
-
-    _dispatcher.Dispatch([this, scriptFileNameString, scriptCodeString]()
+    _dispatcher.Dispatch([this, scriptFileName, scriptCode]()
     {
         if (!_started)
         {
-            _initialScriptMap.emplace(scriptFileNameString, scriptCodeString);
-        }
-        else if (scriptFileNameString == mainScriptFileName)
-        {
-            LogWarning("Cannot redefine main script file after the engine is started.");
+            _initialScriptMap.emplace(scriptFileName, scriptCode);
         }
         else
         {
-            JX_DefineFile(scriptFileNameString.c_str(), scriptCodeString.c_str());
+            JX_DefineFile(scriptFileName.c_str(), scriptCode.c_str());
         }
     });
 }
 
-void JXCoreEngine::Start(const char* workingDirectory, std::function<void(std::exception_ptr ex)> callback)
+void JXCoreEngine::Start(std::string workingDirectory, std::function<void(std::exception_ptr ex)> callback)
 {
-    LogTrace("JXCoreEngine::Start(\"%s\")", workingDirectory);
+    LogTrace("JXCoreEngine::Start(\"%s\")", workingDirectory.c_str());
 
     try
     {
         std::call_once(_initOnce, [=]()
         {
-            JX_InitializeOnce(workingDirectory);
+            JX_InitializeOnce(workingDirectory.c_str());
         });
     }
     catch (...)
@@ -203,31 +237,24 @@ void JXCoreEngine::Start(const char* workingDirectory, std::function<void(std::e
             }
 
             JX_InitializeNewEngine();
+            JX_DefineMainFile(mainScriptCode);
 
-            bool mainScriptFileDefined = false;
             for (const std::pair<std::string, std::string>& scriptEntry : _initialScriptMap)
             {
-                if (scriptEntry.first == mainScriptFileName)
-                {
-                    JX_DefineMainFile(scriptEntry.second.c_str());
-                    mainScriptFileDefined = true;
-                }
-                else
-                {
-                    JX_DefineFile(scriptEntry.first.c_str(), scriptEntry.second.c_str());
-                }
+                JX_DefineFile(scriptEntry.first.c_str(), scriptEntry.second.c_str());
             }
 
-            if (!mainScriptFileDefined)
-            {
-                LogErrorAndThrow("Main script file must be defined before starting.");
-            }
-
+            JX_DefineExtension("jxlog", JXLogCallback);
             JX_DefineExtension("jxcall", JXCallCallback);
             JX_DefineExtension("jxresult", JXResultCallback);
             JX_DefineExtension("jxerror", JXErrorCallback);
 
             JX_StartEngine();
+
+            _callScriptFunction = new JXValue();
+            JX_New(reinterpret_cast<JXValue*>(_callScriptFunction));
+            JX_Evaluate(callScriptFunctionCode, nullptr, reinterpret_cast<JXValue*>(_callScriptFunction));
+
             _started = true;
         }
         catch (...)
@@ -248,8 +275,17 @@ void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
 
     _dispatcher.Dispatch([=]()
     {
+        if (!_started)
+        {
+            LogErrorAndThrow("JXCore engine is not started.");
+        }
+
         try
         {
+            JX_Free(reinterpret_cast<JXValue*>(_callScriptFunction));
+            delete _callScriptFunction;
+            _callScriptFunction = nullptr;
+
             JX_StopEngine();
             _started = false;
         }
@@ -266,14 +302,12 @@ void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
 }
 
 void JXCoreEngine::CallScript(
-    const char* scriptCode,
-    std::function<void(const char* resultJson, std::exception_ptr ex)> callback)
+    std::string scriptCode,
+    std::function<void(std::string resultJson, std::exception_ptr ex)> callback)
 {
-    LogTrace("JXCoreEngine::CallScript(\"%s\")", scriptCode);
+    LogTrace("JXCoreEngine::CallScript(\"%s\")", scriptCode.c_str());
 
-    std::string scriptCodeString(scriptCode);
-
-    _dispatcher.Dispatch([this, scriptCodeString, callback]()
+    _dispatcher.Dispatch([this, scriptCode, callback]()
     {
         try
         {
@@ -282,30 +316,31 @@ void JXCoreEngine::CallScript(
                 LogErrorAndThrow("JXCore engine is not started.");
             }
 
-            std::function<void(const char*, std::exception_ptr)>* callbackPtr =
-                new std::function<void(const char*, std::exception_ptr)>(callback);
+            std::function<void(std::string, std::exception_ptr)>* callbackPtr =
+                new std::function<void(std::string, std::exception_ptr)>(callback);
             unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
+            char callIdBuf[20];
+            snprintf(callIdBuf, sizeof(callIdBuf), "%llx", callId);
 
-            const char scriptWrapperFormat[] =
-                "(function () {"
-                    "var __callId = '%llx';"
-                    "try {"
-                        "var result = (function () { %s })();"
-                        "process.natives.jxresult(__callId, JSON.stringify(result));"
-                    "} catch (e) {"
-                        "process.natives.jxerror(__callId, e);"
-                    "}"
-                "})()";
-            size_t scriptBufSize = scriptCodeString.size() + sizeof(scriptWrapperFormat) + 20;
-            std::vector<char> scriptBuf(scriptBufSize);
-            snprintf(scriptBuf.data(), scriptBufSize, scriptWrapperFormat, callId, scriptCodeString.c_str());
+            JXValue args[2];
+            JX_New(&args[0]);
+            JX_New(&args[1]);
+            JX_SetString(&args[0], callIdBuf);
+            JX_SetString(&args[1], scriptCode.c_str(), scriptCode.size());
 
-            JXValue result;
-            if (!JX_Evaluate(scriptBuf.data(), nullptr, &result))
+            JXValue unusedResult;
+            if (JX_CallFunction(reinterpret_cast<JXValue*>(_callScriptFunction), args, 2, &unusedResult))
+            {
+                JX_Free(&unusedResult);
+                LogVerbose("Successfully evaluated script code.");
+            }
+            else
             {
                 LogErrorAndThrow("Failed to evaluate script code.");
             }
 
+            JX_Free(&args[0]);
+            JX_Free(&args[1]);
             JX_Loop();
         }
         catch (...)
@@ -316,10 +351,10 @@ void JXCoreEngine::CallScript(
 }
 
 void JXCoreEngine::RegisterCallFromScript(
-    const char* scriptFunctionName,
-    std::function<void(const char* argsJson)> callback)
+    std::string scriptFunctionName,
+    std::function<void(std::string argsJson)> callback)
 {
-    LogTrace("JXCoreEngine::RegisterCallFromScript(\"%s\")", scriptFunctionName);
+    LogTrace("JXCoreEngine::RegisterCallFromScript(\"%s\")", scriptFunctionName.c_str());
 
     std::string scriptFunctionNameString(scriptFunctionName);
 
@@ -327,13 +362,13 @@ void JXCoreEngine::RegisterCallFromScript(
     {
         try
         {
-            // TODO: Save initial callbacks and register them at startup.
+            // TODO: Save callbacks registered before startup, and register them at startup.
             if (!_started)
             {
                 LogErrorAndThrow("JXCore engine is not started.");
             }
 
-            std::function<void(const char*)>* callbackPtr = new std::function<void(const char*)>(callback);
+            std::function<void(std::string)>* callbackPtr = new std::function<void(std::string)>(callback);
             unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
 
             const char scriptWrapperFormat[] =
