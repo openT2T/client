@@ -29,7 +29,7 @@ void JXCallCallback(JXValue *result, int argc)
     }
 
     const char* callIdHex = JX_GetString(result);
-    uintptr_t callId = std::strtoul(callIdHex, nullptr, 16);
+    unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
         LogWarning("Invalid result callback ID.");
@@ -60,7 +60,7 @@ void JXResultCallback(JXValue *result, int argc)
     }
 
     const char* callIdHex = JX_GetString(result);
-    uintptr_t callId = std::strtoul(callIdHex, nullptr, 16);
+    unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
         LogWarning("Invalid result callback ID.");
@@ -223,9 +223,9 @@ void JXCoreEngine::Start(const char* workingDirectory, std::function<void(std::e
                 LogErrorAndThrow("Main script file must be defined before starting.");
             }
 
-            JX_DefineExtension("__jxcall", JXCallCallback);
-            JX_DefineExtension("__jxresult", JXResultCallback);
-            JX_DefineExtension("__jxerror", JXErrorCallback);
+            JX_DefineExtension("jxcall", JXCallCallback);
+            JX_DefineExtension("jxresult", JXResultCallback);
+            JX_DefineExtension("jxerror", JXErrorCallback);
 
             JX_StartEngine();
             _started = true;
@@ -284,24 +284,29 @@ void JXCoreEngine::CallScript(
 
             std::function<void(const char*, std::exception_ptr)>* callbackPtr =
                 new std::function<void(const char*, std::exception_ptr)>(callback);
-            uintptr_t callId = reinterpret_cast<uintptr_t>(callbackPtr);
+            unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
 
-            const char* scriptWrapperFormat =
+            const char scriptWrapperFormat[] =
                 "(function () {"
-                    "var __callId = '%jx';"
+                    "var __callId = '%llx';"
                     "try {"
-                        "__jxresult(__callId, JSON.stringify((function () { %s })()));"
+                        "var result = (function () { %s })();"
+                        "process.natives.jxresult(__callId, JSON.stringify(result));"
                     "} catch (e) {"
-                        "__jxerror(__callId, e);"
+                        "process.natives.jxerror(__callId, e);"
                     "}"
                 "})()";
             size_t scriptBufSize = scriptCodeString.size() + sizeof(scriptWrapperFormat) + 20;
             std::vector<char> scriptBuf(scriptBufSize);
             snprintf(scriptBuf.data(), scriptBufSize, scriptWrapperFormat, callId, scriptCodeString.c_str());
-            if (!JX_Evaluate(scriptBuf.data(), nullptr, nullptr))
+
+            JXValue result;
+            if (!JX_Evaluate(scriptBuf.data(), nullptr, &result))
             {
                 LogErrorAndThrow("Failed to evaluate script code.");
             }
+
+            JX_Loop();
         }
         catch (...)
         {
@@ -329,19 +334,23 @@ void JXCoreEngine::RegisterCallFromScript(
             }
 
             std::function<void(const char*)>* callbackPtr = new std::function<void(const char*)>(callback);
-            uintptr_t callId = reinterpret_cast<uintptr_t>(callbackPtr);
+            unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
 
-            const char* scriptWrapperFormat =
+            const char scriptWrapperFormat[] =
                 "function %s() {"
-                    "__jxcall('%jx', arguments);"
+                    "process.natives.jxcall('%llx', arguments);"
                 "}";
             size_t scriptBufSize = scriptFunctionNameString.size() + sizeof(scriptWrapperFormat) + 20;
             std::vector<char> scriptBuf(scriptBufSize);
             snprintf(scriptBuf.data(), scriptBufSize, scriptWrapperFormat, scriptFunctionNameString.c_str(), callId);
-            if (!JX_Evaluate(scriptBuf.data(), nullptr, nullptr))
+
+            JXValue result;
+            if (!JX_Evaluate(scriptBuf.data(), nullptr, &result))
             {
                 LogErrorAndThrow("Failed to evaluate script callback code.");
             }
+
+            JX_Loop();
         }
         catch (...)
         {

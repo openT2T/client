@@ -8,6 +8,11 @@ std::string PlatformStringToString(Platform::String^ utf16String)
 
 Platform::String^ StringToPlatformString(const char* utf8String)
 {
+    if (utf8String == nullptr)
+    {
+        return nullptr;
+    }
+
     static stdext::cvt::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
     return ref new Platform::String(convert.from_bytes(utf8String).c_str());
 }
@@ -22,6 +27,11 @@ Platform::String^ StringToPlatformString(const std::string& utf8String)
 // converted to Platform::FailureException by default. This gives a slightly better mapping.
 Platform::Exception^ ExceptionToPlatformException(std::exception_ptr ex)
 {
+    if (ex == nullptr)
+    {
+        return nullptr;
+    }
+
     try
     {
         std::rethrow_exception(ex);
