@@ -283,7 +283,7 @@ void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
         try
         {
             JX_Free(reinterpret_cast<JXValue*>(_callScriptFunction));
-            delete _callScriptFunction;
+            delete reinterpret_cast<JXValue*>(_callScriptFunction);
             _callScriptFunction = nullptr;
 
             JX_StopEngine();
@@ -326,7 +326,7 @@ void JXCoreEngine::CallScript(
             JX_New(&args[0]);
             JX_New(&args[1]);
             JX_SetString(&args[0], callIdBuf);
-            JX_SetString(&args[1], scriptCode.c_str(), scriptCode.size());
+            JX_SetString(&args[1], scriptCode.c_str(), static_cast<int>(scriptCode.size()));
 
             JXValue unusedResult;
             if (JX_CallFunction(reinterpret_cast<JXValue*>(_callScriptFunction), args, 2, &unusedResult))

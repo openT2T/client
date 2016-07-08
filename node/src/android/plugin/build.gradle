@@ -15,6 +15,9 @@ android {
 
     ndk {
         moduleName "NodeEngine"
+        abiFilters.add("armeabi")
+        abiFilters.add("armeabi-v7")
+        abiFilters.add("x86")
         stl "c++_static"
         ldLibs.add("log")
         ldLibs.add("z")
@@ -35,6 +38,11 @@ android {
                     library "libjxcore"
                 }
             }
+            jniLibs {
+                dependencies {
+                    library "libjxcore"
+                }
+            }
         }
     }
 
@@ -43,25 +51,6 @@ android {
             minifyEnabled false
             useProguard false
             proguardFiles.add(file('proguard-rules.pro'))
-        }
-    }
-
-    productFlavors {
-        create("fat") {
-            ndk {
-                abiFilters.add("armeabi")
-                abiFilters.add("x86")
-            }
-        }
-        create("arm") {
-            ndk {
-                abiFilters.add("armeabi")
-            }
-        }
-        create("x86") {
-            ndk {
-                abiFilters.add("x86")
-            }
         }
     }
 }

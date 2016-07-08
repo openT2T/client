@@ -232,7 +232,10 @@
 		96BA5E4E1D277D09001D9EB0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = ../common;
+				HEADER_SEARCH_PATHS = (
+					../common,
+					../external,
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_MODULE_NAME = OpenT2TClient;
 				PRODUCT_NAME = OpenT2TClient;
@@ -243,7 +246,10 @@
 		96BA5E4F1D277D09001D9EB0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = ../common;
+				HEADER_SEARCH_PATHS = (
+					../common,
+					../external,
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_MODULE_NAME = OpenT2TClient;
 				PRODUCT_NAME = OpenT2TClient;

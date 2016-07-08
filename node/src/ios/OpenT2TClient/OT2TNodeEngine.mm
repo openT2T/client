@@ -1,9 +1,18 @@
 
-#include <functional>
+#include <cstdlib>
 #include <exception>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <queue>
 #include <stdexcept>
+#include <string>
+#include <thread>
+#include <unordered_map>
 
 #include "Log.h"
+#include "AsyncQueue.h"
+#include "WorkItemDispatcher.h"
 #include "INodeEngine.h"
 #include "JXCoreEngine.h"
 
@@ -146,7 +155,7 @@ using namespace OpenT2T;
 {
     try
     {
-        _node->Start(std::string([scriptCode UTF8String]),
+        _node->CallScript(std::string([scriptCode UTF8String]),
             [=](std::string resultJson, std::exception_ptr ex)
         {
             if (ex == nullptr)
