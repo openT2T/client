@@ -1,20 +1,29 @@
 
 void resolvePromise(JNIEnv* env, jobject promise, jobject result)
 {
+    OpenT2T::LogTrace("resolvePromise()");
+
     jclass promiseClass = env->GetObjectClass(promise);
-    jmethodID resolveMethod = env->GetMethodID(promiseClass, "resolve", "(Ljava/lang/Object;)V");
+    jmethodID resolveMethod = env->GetMethodID(
+            promiseClass, "resolve", "(Ljava/lang/Object;)V");
     env->CallVoidMethod(promise, resolveMethod, result);
 }
 
 void rejectPromise(JNIEnv* env, jobject promise, jthrowable ex)
 {
+    OpenT2T::LogTrace("rejectPromise()");
+
     jclass promiseClass = env->GetObjectClass(promise);
-    jmethodID rejectMethod = env->GetMethodID(promiseClass, "reject", "(Ljava/lang/Exception;)V");
+    jmethodID rejectMethod = env->GetMethodID(
+            promiseClass, "reject", "(Ljava/lang/Exception;)V");
     env->CallVoidMethod(promise, rejectMethod, ex);
 }
 
 jthrowable newJavaException(JNIEnv* env, const char* exceptionClassName, const char* message)
 {
+    OpenT2T::LogTrace("newJavaException(\"%s\", \"%s\")",
+            exceptionClassName, (message != nullptr ? message : ""));
+
     jthrowable javaException;
     jclass exceptionClass = env->FindClass(exceptionClassName);
     if (message == nullptr)

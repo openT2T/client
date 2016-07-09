@@ -47,6 +47,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            ndk {
+                cppFlags.add("-DDEBUG")
+            }
+        }
         release {
             minifyEnabled false
             useProguard false

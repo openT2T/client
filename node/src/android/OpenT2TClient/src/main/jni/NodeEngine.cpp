@@ -45,10 +45,13 @@ INodeEngine* getNodeEngine(JNIEnv* env, jobject thiz)
     return nodeEngine;
 }
 
+JavaVM* jvm;
+
 extern "C" {
 
-jint JNI_OnLoad(JavaVM *vm, void *reserved)
+jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
+    jvm = vm;
     return JNI_VERSION_1_4;
 }
 
@@ -132,26 +135,36 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
     {
+        promise = env->NewGlobalRef(promise);
         try
         {
             nodeEngine->Start(workingDirectoryChars, [=](std::exception_ptr ex)
             {
+                JNIEnv* env;
+                jvm->AttachCurrentThread(&env, nullptr);
+
                 if (ex == nullptr)
                 {
+                    LogTrace("start succeeded");
                     resolvePromise(env, promise, nullptr);
                 }
                 else
                 {
+                    LogTrace("start failed");
                     rejectPromise(
                             env,
                             promise,
                             exceptionToJavaException(env, std::current_exception()));
                 }
+
+                env->DeleteGlobalRef(promise);
+                jvm->DetachCurrentThread();
             });
         }
         catch (...)
         {
             env->Throw(exceptionToJavaException(env, std::current_exception()));
+            env->DeleteGlobalRef(promise);
         }
     }
 
@@ -166,26 +179,36 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_stop(
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
     {
+        promise = env->NewGlobalRef(promise);
         try
         {
             nodeEngine->Stop([=](std::exception_ptr ex)
             {
+                JNIEnv* env;
+                jvm->AttachCurrentThread(&env, nullptr);
+
                 if (ex == nullptr)
                 {
+                    LogTrace("stop succeeded");
                     resolvePromise(env, promise, nullptr);
                 }
                 else
                 {
+                    LogTrace("stop failed");
                     rejectPromise(
                             env,
                             promise,
                             exceptionToJavaException(env, std::current_exception()));
                 }
+
+                env->DeleteGlobalRef(promise);
+                jvm->DetachCurrentThread();
             });
         }
         catch (...)
         {
             env->Throw(exceptionToJavaException(env, std::current_exception()));
+            env->DeleteGlobalRef(promise);
         }
     }
 }
@@ -194,40 +217,47 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
     JNIEnv* env, jobject thiz, jobject promise, jstring scriptCode)
 {
     const char* scriptCodeChars = env->GetStringUTFChars(scriptCode, JNI_FALSE);
-
     LogTrace("callScript(\"%s\")", scriptCodeChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
     {
+        promise = env->NewGlobalRef(promise);
         try
         {
             nodeEngine->CallScript(scriptCodeChars,
                 [=](std::string resultJson, std::exception_ptr ex)
             {
+                JNIEnv* env;
+                jvm->AttachCurrentThread(&env, nullptr);
+
                 if (ex == nullptr)
                 {
+                    LogTrace("callScript succeeded");
                     jstring resultJsonString = env->NewStringUTF(resultJson.c_str());
                     resolvePromise(env, promise, resultJsonString);
                 }
                 else
                 {
+                    LogTrace("callScript failed");
                     rejectPromise(
                             env,
                             promise,
                             exceptionToJavaException(env, std::current_exception()));
                 }
+
+                env->DeleteGlobalRef(promise);
+                jvm->DetachCurrentThread();
             });
         }
         catch (...)
         {
             env->Throw(exceptionToJavaException(env, std::current_exception()));
+            env->DeleteGlobalRef(promise);
         }
     }
 
     env->ReleaseStringUTFChars(scriptCode, scriptCodeChars);
-
-    resolvePromise(env, promise, nullptr);
 }
 
 JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
@@ -240,21 +270,33 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
     if (nodeEngine != nullptr)
     {
+        scriptFunctionName = reinterpret_cast<jstring>(env->NewGlobalRef(scriptFunctionName));
         try
         {
             nodeEngine->RegisterCallFromScript(scriptFunctionNameChars, [=](std::string argsJson)
             {
+                JNIEnv* env;
+                jvm->AttachCurrentThread(&env, nullptr);
+
+                const char* scriptFunctionNameChars =
+                        env->GetStringUTFChars(scriptFunctionName, JNI_FALSE);
+                LogTrace("callFromScript(\"%s\")", scriptFunctionNameChars);
+                env->ReleaseStringUTFChars(scriptFunctionName, scriptFunctionNameChars);
+
                 jclass thisClass = env->GetObjectClass(thiz);
                 jmethodID raiseCallFromScriptMethod = env->GetMethodID(
                     thisClass, "raiseCallFromScript", "(Ljava/lang/String;Ljava/lang/String;)V");
                 jstring argsJsonString = env->NewStringUTF(argsJson.c_str());
                 env->CallVoidMethod(
                         thiz, raiseCallFromScriptMethod, scriptFunctionName, argsJsonString);
+
+                jvm->DetachCurrentThread();
             });
         }
         catch (...)
         {
             env->Throw(exceptionToJavaException(env, std::current_exception()));
+            env->DeleteGlobalRef(scriptFunctionName);
         }
     }
 

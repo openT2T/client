@@ -26,9 +26,9 @@ const char* mainScriptCode =
     // Override console methods to redirect to the console callback.
     // Note the constants here must correspond to the LogSeverity enum values.
     "global.console = {"
-        "error: function (msg) { process.natives.jxlog(1, msg); }"
-        "warn: function (msg) { process.natives.jxlog(2, msg); }"
-        "info: function (msg) { process.natives.jxlog(3, msg); }"
+        "error: function (msg) { process.natives.jxlog(1, msg); },"
+        "warn: function (msg) { process.natives.jxlog(2, msg); },"
+        "info: function (msg) { process.natives.jxlog(3, msg); },"
         "log: function (msg) { process.natives.jxlog(4, msg); }"
     "};";
 
