@@ -105,7 +105,6 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_defineScriptFile(
 {
     const char* scriptFileNameChars = env->GetStringUTFChars(scriptFileName, JNI_FALSE);
     const char* scriptCodeChars = env->GetStringUTFChars(scriptCode, JNI_FALSE);
-
     LogTrace("defineScriptFile(\"%s\", \"...\")", scriptFileNameChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
@@ -114,9 +113,11 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_defineScriptFile(
         try
         {
             nodeEngine->DefineScriptFile(scriptFileNameChars, scriptCodeChars);
+            LogTrace("defineScriptFile succeeded");
         }
         catch (...)
         {
+            LogError("defineScriptFile failed");
             env->Throw(exceptionToJavaException(env, std::current_exception()));
         }
     }
@@ -129,7 +130,6 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
     JNIEnv* env, jobject thiz, jobject promise, jstring workingDirectory)
 {
     const char* workingDirectoryChars = env->GetStringUTFChars(workingDirectory, JNI_FALSE);
-
     LogTrace("start(\"%s\")", workingDirectoryChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
@@ -150,7 +150,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
                 }
                 else
                 {
-                    LogTrace("start failed");
+                    LogError("start failed");
                     rejectPromise(
                             env,
                             promise,
@@ -163,6 +163,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
         }
         catch (...)
         {
+            LogError("start failed");
             env->Throw(exceptionToJavaException(env, std::current_exception()));
             env->DeleteGlobalRef(promise);
         }
@@ -194,7 +195,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_stop(
                 }
                 else
                 {
-                    LogTrace("stop failed");
+                    LogError("stop failed");
                     rejectPromise(
                             env,
                             promise,
@@ -207,6 +208,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_stop(
         }
         catch (...)
         {
+            LogError("stop failed");
             env->Throw(exceptionToJavaException(env, std::current_exception()));
             env->DeleteGlobalRef(promise);
         }
@@ -239,7 +241,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
                 }
                 else
                 {
-                    LogTrace("callScript failed");
+                    LogError("callScript failed");
                     rejectPromise(
                             env,
                             promise,
@@ -252,6 +254,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
         }
         catch (...)
         {
+            LogError("callScript failed");
             env->Throw(exceptionToJavaException(env, std::current_exception()));
             env->DeleteGlobalRef(promise);
         }
@@ -264,7 +267,6 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
     JNIEnv* env, jobject thiz, jstring scriptFunctionName)
 {
     const char* scriptFunctionNameChars = env->GetStringUTFChars(scriptFunctionName, JNI_FALSE);
-
     LogTrace("registerCallFromScript(\"%s\")", scriptFunctionNameChars);
 
     INodeEngine* nodeEngine = getNodeEngine(env, thiz);
@@ -295,11 +297,13 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
         }
         catch (...)
         {
+            LogError("registerCallFromScript failed");
             env->Throw(exceptionToJavaException(env, std::current_exception()));
             env->DeleteGlobalRef(scriptFunctionName);
         }
     }
 
+    LogTrace("registerCallFromScript succeeded");
     env->ReleaseStringUTFChars(scriptFunctionName, scriptFunctionNameChars);
 }
 

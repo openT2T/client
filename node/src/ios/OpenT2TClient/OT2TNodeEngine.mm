@@ -82,14 +82,17 @@ using namespace OpenT2T;
              withContents: (NSString*) scriptCode
                     error: (NSError**) outError
 {
+    LogTrace("defineScriptFile(\"%s\")", [scriptFileName UTF8String]);
     try
     {
         _node->DefineScriptFile(
             std::string([scriptFileName UTF8String]),
             std::string([scriptCode UTF8String]));
+        LogTrace("defineScriptFile succeeded");
     }
     catch (...)
     {
+        LogTrace("defineScriptFile failed");
         ExceptionToNSError(std::current_exception(), outError);
     }
 }
@@ -98,16 +101,19 @@ using namespace OpenT2T;
                then: (void(^)()) success
               catch: (void(^)(NSError*)) failure
 {
+    LogTrace("start(\"%s\")", [workingDirectory UTF8String]);
     try
     {
         _node->Start(std::string([workingDirectory UTF8String]), [=](std::exception_ptr ex)
         {
             if (ex == nullptr)
             {
+                LogTrace("start succeeded");
                 success();
             }
             else
             {
+                LogTrace("start failed");
                 NSError* error;
                 ExceptionToNSError(std::current_exception(), &error);
                 failure(error);
@@ -116,6 +122,7 @@ using namespace OpenT2T;
     }
     catch (...)
     {
+        LogTrace("start failed");
         NSError* error;
         ExceptionToNSError(std::current_exception(), &error);
         failure(error);
@@ -125,16 +132,19 @@ using namespace OpenT2T;
 - (void) stopAsyncThen: (void(^)()) success
                  catch: (void(^)(NSError*)) failure
 {
+    LogTrace("stop()");
     try
     {
         _node->Stop([=](std::exception_ptr ex)
         {
             if (ex == nullptr)
             {
+                LogTrace("stop succeeded");
                 success();
             }
             else
             {
+                LogTrace("stop failed");
                 NSError* error;
                 ExceptionToNSError(std::current_exception(), &error);
                 failure(error);
@@ -143,6 +153,7 @@ using namespace OpenT2T;
     }
     catch (...)
     {
+        LogTrace("stop failed");
         NSError* error;
         ExceptionToNSError(std::current_exception(), &error);
         failure(error);
@@ -153,6 +164,7 @@ using namespace OpenT2T;
                   result: (void(^)(NSString*)) success
                    catch: (void(^)(NSError*)) failure
 {
+    LogTrace("callScript(\"%s\")", [scriptCode UTF8String]);
     try
     {
         _node->CallScript(std::string([scriptCode UTF8String]),
@@ -160,11 +172,13 @@ using namespace OpenT2T;
         {
             if (ex == nullptr)
             {
+                LogTrace("callScript succeeded");
                 NSString* resultJsonString = [NSString stringWithUTF8String: resultJson.c_str()];
                 success(resultJsonString);
             }
             else
             {
+                LogTrace("callScript failed");
                 NSError* error;
                 ExceptionToNSError(std::current_exception(), &error);
                 failure(error);
@@ -173,6 +187,7 @@ using namespace OpenT2T;
     }
     catch (...)
     {
+        LogTrace("callScript failed");
         NSError* error;
         ExceptionToNSError(std::current_exception(), &error);
         failure(error);
@@ -182,16 +197,19 @@ using namespace OpenT2T;
 - (void) registerCallFromScript: (NSString*) scriptFunctionName
                           error: (NSError**) outError
 {
+    LogTrace("registerCallFromScript(\"%s\")", [scriptFunctionName UTF8String]);
     try
     {
         _node->RegisterCallFromScript([scriptFunctionName UTF8String], [=](std::string argsJson)
         {
+            LogTrace("callFromScript(\"%s\")", [scriptFunctionName UTF8String]);
             [self raiseCallFromScript: scriptFunctionName
                              argsJson: [NSString stringWithUTF8String: argsJson.c_str()]];
         });
     }
     catch (...)
     {
+        LogTrace("registerCallFromScript failed");
         ExceptionToNSError(std::current_exception(), outError);
     }
 }

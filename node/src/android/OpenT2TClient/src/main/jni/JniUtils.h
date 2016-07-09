@@ -7,6 +7,11 @@ void resolvePromise(JNIEnv* env, jobject promise, jobject result)
     jmethodID resolveMethod = env->GetMethodID(
             promiseClass, "resolve", "(Ljava/lang/Object;)V");
     env->CallVoidMethod(promise, resolveMethod, result);
+
+    if (env->ExceptionOccurred())
+    {
+        OpenT2T::LogTrace("Promise resolve threw exception.");
+    }
 }
 
 void rejectPromise(JNIEnv* env, jobject promise, jthrowable ex)
@@ -17,6 +22,11 @@ void rejectPromise(JNIEnv* env, jobject promise, jthrowable ex)
     jmethodID rejectMethod = env->GetMethodID(
             promiseClass, "reject", "(Ljava/lang/Exception;)V");
     env->CallVoidMethod(promise, rejectMethod, ex);
+
+    if (env->ExceptionOccurred())
+    {
+        OpenT2T::LogTrace("Promise reject threw exception.");
+    }
 }
 
 jthrowable newJavaException(JNIEnv* env, const char* exceptionClassName, const char* message)
