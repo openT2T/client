@@ -8,8 +8,8 @@
 - (OT2TNodeCallEvent*) initWithFunctionName: (NSString*) functionName
                                    argsJson: (NSString*) argsJson;
 
-@property NSString* functionName;
-@property NSString* argsJson;
+@property (retain) NSString* functionName;
+@property (retain) NSString* argsJson;
 
 @end
 

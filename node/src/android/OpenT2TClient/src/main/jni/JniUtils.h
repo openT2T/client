@@ -10,7 +10,8 @@ void resolvePromise(JNIEnv* env, jobject promise, jobject result)
 
     if (env->ExceptionOccurred())
     {
-        OpenT2T::LogTrace("Promise resolve threw exception.");
+        OpenT2T::LogError("Promise resolve threw exception");
+        env->ExceptionClear();
     }
 }
 
@@ -25,7 +26,8 @@ void rejectPromise(JNIEnv* env, jobject promise, jthrowable ex)
 
     if (env->ExceptionOccurred())
     {
-        OpenT2T::LogTrace("Promise reject threw exception.");
+        OpenT2T::LogError("Promise reject threw exception");
+        env->ExceptionClear();
     }
 }
 

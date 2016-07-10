@@ -49,22 +49,22 @@ using namespace OpenT2T;
 
 @implementation OT2TNodeEngine
 {
-    OpenT2T::INodeEngine* _node;
+    INodeEngine* _node;
     NSHashTable<OT2TNodeCallListener>* _callFromScriptListeners;
 }
 
 + (void) initialize
 {
 #if DEBUG
-    SetLogLevel(LogSeverity::Trace);
+    OpenT2T::logLevel = LogSeverity::Trace;
 #else
-    SetLogLevel(LogSeverity::Info);
+    OpenT2T::logLevel = LogSeverity::Info;
 #endif
 
-    SetLogHandler([](LogSeverity severity, const char* message)
+    OpenT2T::logHandler = [](LogSeverity severity, const char* message)
     {
         NSLog(@"%s", message);
-    });
+    };
 }
 
 - (OT2TNodeEngine*) init
@@ -82,6 +82,12 @@ using namespace OpenT2T;
              withContents: (NSString*) scriptCode
                     error: (NSError**) outError
 {
+    if (!ValidateArgumentNotNull("defineScriptFile", "scriptFileName", scriptFileName, outError) ||
+        !ValidateArgumentNotNull("defineScriptFile", "scriptCode", scriptCode, outError))
+    {
+        return;
+    }
+
     LogTrace("defineScriptFile(\"%s\")", [scriptFileName UTF8String]);
     try
     {
@@ -101,6 +107,13 @@ using namespace OpenT2T;
                then: (void(^)()) success
               catch: (void(^)(NSError*)) failure
 {
+    NSError* error;
+    if (!ValidateArgumentNotNull("startAsync", "workingDirectory", workingDirectory, &error))
+    {
+        failure(error);
+        return;
+    }
+
     LogTrace("start(\"%s\")", [workingDirectory UTF8String]);
     try
     {
@@ -123,7 +136,6 @@ using namespace OpenT2T;
     catch (...)
     {
         LogTrace("start failed");
-        NSError* error;
         ExceptionToNSError(std::current_exception(), &error);
         failure(error);
     }
@@ -164,6 +176,13 @@ using namespace OpenT2T;
                   result: (void(^)(NSString*)) success
                    catch: (void(^)(NSError*)) failure
 {
+    NSError* error;
+    if (!ValidateArgumentNotNull("callScriptAsync", "scriptCode", scriptCode, &error))
+    {
+        failure(error);
+        return;
+    }
+
     LogTrace("callScript(\"%s\")", [scriptCode UTF8String]);
     try
     {

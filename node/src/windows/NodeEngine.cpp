@@ -16,15 +16,15 @@ static struct _init
     _init()
     {
 #if DEBUG
-        SetLogLevel(LogSeverity::Trace);
+        OpenT2T::logLevel = LogSeverity::Trace;
 #else
-        SetLogLevel(LogSeverity::Info);
+        OpenT2T::logLevel = LogSeverity::Info;
 #endif
 
-        SetLogHandler([](LogSeverity severity, const char* message)
+        OpenT2T::logHandler = [](LogSeverity severity, const char* message)
         {
             ::OutputDebugStringA(message);
-        });
+        };
     }
 } _staticInit;
 

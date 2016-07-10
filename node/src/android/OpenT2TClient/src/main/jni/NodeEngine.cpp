@@ -59,12 +59,12 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_staticInit(
         JNIEnv* env, jobject thiz)
 {
 #if DEBUG
-    SetLogLevel(LogSeverity::Trace);
+    OpenT2T::logLevel = LogSeverity::Trace;
 #else
-    SetLogLevel(LogSeverity::Info);
+    OpenT2T::logLevel = LogSeverity::Info;
 #endif
 
-    SetLogHandler([](LogSeverity severity, const char* message)
+    OpenT2T::logHandler = [](LogSeverity severity, const char* message)
     {
         const char* logTag = "OpenT2T.NodeEngine.JNI";
 
@@ -88,7 +88,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_staticInit(
         }
 
         __android_log_print(androidLogLevel, logTag, message);
-    });
+    };
 }
 
 JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_init(
@@ -291,6 +291,11 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
                 jstring argsJsonString = env->NewStringUTF(argsJson.c_str());
                 env->CallVoidMethod(
                         thiz, raiseCallFromScriptMethod, scriptFunctionName, argsJsonString);
+                if (env->ExceptionOccurred())
+                {
+                    OpenT2T::LogError("raiseCallFromScript threw exception");
+                    env->ExceptionClear();
+                }
 
                 jvm->DetachCurrentThread();
             });

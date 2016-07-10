@@ -20,8 +20,8 @@ using namespace OpenT2T;
 
 const char* mainScriptFileName = "main.js";
 
-// This is the "main.js" script for JXCore. It doesn't do much; most execution should be driven by
-// defining additional named script files and directly evaluating script code strings.
+/// JavaScript contents of the "main.js" script for JXCore. It doesn't do much; most execution should be
+/// driven by defining additional named script files and directly evaluating script code strings.
 const char* mainScriptCode =
     // Override console methods to redirect to the console callback.
     // Note the constants here must correspond to the LogSeverity enum values.
@@ -32,7 +32,8 @@ const char* mainScriptCode =
         "log: function (msg) { process.natives.jxlog(4, msg); }"
     "};";
 
-// Evaluates script code and returns the result (or error) via a callback.
+/// JavaScript code for a function that evaluates the caller's script code and returns the result (or error)
+/// via a callback.
 const char* callScriptFunctionCode =
     "(function (callId, scriptCode) {"
         "var resultJson;"
@@ -46,6 +47,7 @@ const char* callScriptFunctionCode =
         "process.natives.jxresult(callId, resultJson);"
     "})";
 
+/// Callback invoked by JavaScript calls to console.log (overridden by main.js).
 void JXLogCallback(JXValue* result, int argc)
 {
     if (argc != 2)
@@ -59,6 +61,90 @@ void JXLogCallback(JXValue* result, int argc)
     Log(severity, message);
 }
 
+/// Callback invoked with the result of evaluation of caller's JavaScript code.
+void JXResultCallback(JXValue* result, int argc)
+{
+    if (argc != 2)
+    {
+        LogWarning("Invalid result callback.");
+        return;
+    }
+
+    const char* callIdHex = JX_GetString(result);
+    unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
+    if (callId == 0)
+    {
+        LogWarning("Invalid result callback ID.");
+        return;
+    }
+
+    const char* resultJson = JX_GetString(result + 1);
+
+    std::function<void(std::string, std::exception_ptr)>* callbackPtr =
+        reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
+    try
+    {
+        // Since this was a successful evaluation, the first parameter passed to the callback is the
+        // JSON result of the evaluation, and the second parameter (exception) is null.
+        (*callbackPtr)(resultJson ? std::string(resultJson) : std::string(), nullptr);
+    }
+    catch (...)
+    {
+        LogWarning("Script result callback function threw an exception.");
+    }
+
+    delete callbackPtr;
+}
+
+/// Callback invoked when evaluation of caller's JavaScript code threw an error.
+void JXErrorCallback(JXValue* result, int argc)
+{
+    if (argc != 2)
+    {
+        LogWarning("Invalid error callback.");
+        return;
+    }
+
+    const char* callIdHex = JX_GetString(result);
+    uintptr_t callId = std::strtoul(callIdHex, nullptr, 16);
+    if (callId == 0)
+    {
+        LogWarning("Invalid result callback ID.");
+        return;
+    }
+
+    // Get the message property from the JavaScript Error object (2nd argument), if available.
+    JXValue errorMessageValue;
+    JX_New(&errorMessageValue);
+    JX_GetNamedProperty(result + 1, "message", &errorMessageValue);
+    const char* errorMessage = JX_GetString(&errorMessageValue);
+
+    std::function<void(std::string, std::exception_ptr) > * callbackPtr =
+        reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
+    try
+    {
+        // Convert the JavaScript Error to a std::runtime_error with the same message.
+        throw (errorMessage ? std::runtime_error(errorMessage) : std::runtime_error("Unknown script error."));
+    }
+    catch (...)
+    {
+        try
+        {
+            // Since this was a failed evaluation, the first parameter passed to the callback (the result)
+            // is null, and the second is the exception pointer.
+            (*callbackPtr)(nullptr, std::current_exception());
+        }
+        catch (...)
+        {
+            LogWarning("Script error callback function threw an exception.");
+        }
+    }
+
+    JX_Free(&errorMessageValue);
+    delete callbackPtr;
+}
+
+/// Callback invoked when JavaScript code calls a function that was registered as a call from script.
 void JXCallCallback(JXValue* result, int argc)
 {
     if (argc != 2)
@@ -90,90 +176,15 @@ void JXCallCallback(JXValue* result, int argc)
     // Don't delete this callback function; it may be invoked multiple times.
 }
 
-void JXResultCallback(JXValue* result, int argc)
-{
-    if (argc != 2)
-    {
-        LogWarning("Invalid result callback.");
-        return;
-    }
-
-    const char* callIdHex = JX_GetString(result);
-    unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
-    if (callId == 0)
-    {
-        LogWarning("Invalid result callback ID.");
-        return;
-    }
-
-    const char* resultJson = JX_GetString(result + 1);
-
-    std::function<void(std::string, std::exception_ptr)>* callbackPtr =
-        reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
-    try
-    {
-        (*callbackPtr)(resultJson ? std::string(resultJson) : std::string(), nullptr);
-    }
-    catch (...)
-    {
-        LogWarning("Script result callback function threw an exception.");
-    }
-
-    delete callbackPtr;
-}
-
-void JXErrorCallback(JXValue* result, int argc)
-{
-    if (argc != 2)
-    {
-        LogWarning("Invalid error callback.");
-        return;
-    }
-
-    const char* callIdHex = JX_GetString(result);
-    uintptr_t callId = std::strtoul(callIdHex, nullptr, 16);
-    if (callId == 0)
-    {
-        LogWarning("Invalid result callback ID.");
-        return;
-    }
-
-    // Get the message property from the JavaScript error object (2nd argument), if available.
-    JXValue errorMessageValue;
-    JX_New(&errorMessageValue);
-    JX_GetNamedProperty(result + 1, "message", &errorMessageValue);
-    const char* errorMessage = JX_GetString(&errorMessageValue);
-
-    std::function<void(std::string, std::exception_ptr) > * callbackPtr =
-        reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
-    try
-    {
-        throw (errorMessage ? std::runtime_error(errorMessage) : std::runtime_error("Unknown script error."));
-    }
-    catch (...)
-    {
-        try
-        {
-            (*callbackPtr)(nullptr, std::current_exception());
-        }
-        catch (...)
-        {
-            LogWarning("Script error callback function threw an exception.");
-        }
-    }
-
-    JX_Free(&errorMessageValue);
-    delete callbackPtr;
-}
-
-
-std::once_flag JXCoreEngine::_initOnce;
-
 inline void LogErrorAndThrow(const char* message)
 {
     LogError(message);
     throw std::logic_error(message);
 }
+
+// Static member initialization
+std::once_flag JXCoreEngine::_initOnce;
+std::string JXCoreEngine::_workingDirectory;
 
 JXCoreEngine::JXCoreEngine() :
     _started(false),
@@ -213,6 +224,23 @@ void JXCoreEngine::Start(std::string workingDirectory, std::function<void(std::e
 {
     LogTrace("JXCoreEngine::Start(\"%s\")", workingDirectory.c_str());
 
+    if (workingDirectory.length() == 0)
+    {
+        throw std::invalid_argument("A working directory is required.");
+    }
+
+    if (_workingDirectory.length() == 0)
+    {
+        _workingDirectory = workingDirectory;
+    }
+    else if (workingDirectory != _workingDirectory)
+    {
+        // This limitation of JXCore is not represented in the INodeEngine interface (e.g. as a static
+        // initialization method taking the working directory), because other node engines might not
+        // have the same limitation.
+        LogErrorAndThrow("Cannot start multiple JXCore instances with different working directories.");
+    }
+
     try
     {
         std::call_once(_initOnce, [=]()
@@ -223,11 +251,10 @@ void JXCoreEngine::Start(std::string workingDirectory, std::function<void(std::e
     catch (...)
     {
         LogError("Failed to initialize JXCore engine.");
-        callback(std::current_exception());
-        return;
+        throw;
     }
 
-    _dispatcher.Dispatch([=]()
+    _dispatcher.Dispatch([this, callback]()
     {
         try
         {
@@ -239,17 +266,22 @@ void JXCoreEngine::Start(std::string workingDirectory, std::function<void(std::e
             JX_InitializeNewEngine();
             JX_DefineMainFile(mainScriptCode);
 
-            for (const std::pair<std::string, std::string>& scriptEntry : _initialScriptMap)
-            {
-                JX_DefineFile(scriptEntry.first.c_str(), scriptEntry.second.c_str());
-            }
-
             JX_DefineExtension("jxlog", JXLogCallback);
             JX_DefineExtension("jxcall", JXCallCallback);
             JX_DefineExtension("jxresult", JXResultCallback);
             JX_DefineExtension("jxerror", JXErrorCallback);
 
+            for (const std::pair<std::string, std::string>& scriptEntry : _initialScriptMap)
+            {
+                JX_DefineFile(scriptEntry.first.c_str(), scriptEntry.second.c_str());
+            }
+
             JX_StartEngine();
+
+            for (const std::pair<std::string, std::function<void(std::string)>> callFromScriptEntry : _initialCallFromScriptMap)
+            {
+                this->RegisterCallFromScriptInternal(callFromScriptEntry.first, callFromScriptEntry.second);
+            }
 
             _callScriptFunction = new JXValue();
             JX_New(reinterpret_cast<JXValue*>(_callScriptFunction));
@@ -273,15 +305,15 @@ void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
 {
     LogTrace("JXCoreEngine::Stop()");
 
-    _dispatcher.Dispatch([=]()
+    _dispatcher.Dispatch([this, callback]()
     {
-        if (!_started)
-        {
-            LogErrorAndThrow("JXCore engine is not started.");
-        }
-
         try
         {
+            if (!_started)
+            {
+                LogErrorAndThrow("JXCore engine is not started.");
+            }
+
             JX_Free(reinterpret_cast<JXValue*>(_callScriptFunction));
             delete reinterpret_cast<JXValue*>(_callScriptFunction);
             _callScriptFunction = nullptr;
@@ -309,44 +341,7 @@ void JXCoreEngine::CallScript(
 
     _dispatcher.Dispatch([this, scriptCode, callback]()
     {
-        try
-        {
-            if (!_started)
-            {
-                LogErrorAndThrow("JXCore engine is not started.");
-            }
-
-            std::function<void(std::string, std::exception_ptr)>* callbackPtr =
-                new std::function<void(std::string, std::exception_ptr)>(callback);
-            unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
-            char callIdBuf[20];
-            snprintf(callIdBuf, sizeof(callIdBuf), "%llx", callId);
-
-            JXValue args[2];
-            JX_New(&args[0]);
-            JX_New(&args[1]);
-            JX_SetString(&args[0], callIdBuf);
-            JX_SetString(&args[1], scriptCode.c_str(), static_cast<int>(scriptCode.size()));
-
-            JXValue unusedResult;
-            if (JX_CallFunction(reinterpret_cast<JXValue*>(_callScriptFunction), args, 2, &unusedResult))
-            {
-                JX_Free(&unusedResult);
-                LogVerbose("Successfully evaluated script code.");
-            }
-            else
-            {
-                LogErrorAndThrow("Failed to evaluate script code.");
-            }
-
-            JX_Free(&args[0]);
-            JX_Free(&args[1]);
-            JX_Loop();
-        }
-        catch (...)
-        {
-            callback(nullptr, std::current_exception());
-        }
+        this->CallScriptInternal(scriptCode, callback);
     });
 }
 
@@ -356,40 +351,98 @@ void JXCoreEngine::RegisterCallFromScript(
 {
     LogTrace("JXCoreEngine::RegisterCallFromScript(\"%s\")", scriptFunctionName.c_str());
 
-    std::string scriptFunctionNameString(scriptFunctionName);
-
-    _dispatcher.Dispatch([this, scriptFunctionNameString, callback]()
+    _dispatcher.Dispatch([this, scriptFunctionName, callback]()
     {
-        try
+        if (!_started)
         {
-            // TODO: Save callbacks registered before startup, and register them at startup.
-            if (!_started)
-            {
-                LogErrorAndThrow("JXCore engine is not started.");
-            }
-
-            std::function<void(std::string)>* callbackPtr = new std::function<void(std::string)>(callback);
-            unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
-
-            const char scriptWrapperFormat[] =
-                "function %s() {"
-                    "process.natives.jxcall('%llx', arguments);"
-                "}";
-            size_t scriptBufSize = scriptFunctionNameString.size() + sizeof(scriptWrapperFormat) + 20;
-            std::vector<char> scriptBuf(scriptBufSize);
-            snprintf(scriptBuf.data(), scriptBufSize, scriptWrapperFormat, scriptFunctionNameString.c_str(), callId);
-
-            JXValue result;
-            if (!JX_Evaluate(scriptBuf.data(), nullptr, &result))
-            {
-                LogErrorAndThrow("Failed to evaluate script callback code.");
-            }
-
-            JX_Loop();
+            _initialCallFromScriptMap.emplace(scriptFunctionName, callback);
         }
-        catch (...)
+        else
         {
-            LogError("Failed to register call from script.");
+            this->RegisterCallFromScriptInternal(scriptFunctionName, callback);
         }
     });
+}
+
+void JXCoreEngine::CallScriptInternal(
+    std::string scriptCode,
+    std::function<void(std::string resultJson, std::exception_ptr ex)> callback)
+{
+    try
+    {
+        if (!_started)
+        {
+            LogErrorAndThrow("JXCore engine is not started.");
+        }
+
+        std::function<void(std::string, std::exception_ptr)>* callbackPtr =
+        new std::function<void(std::string, std::exception_ptr)>(callback);
+
+        // The callback function pointer is passed through JavaScript as a hex-formatted number.
+        unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
+        char callIdBuf[20];
+        snprintf(callIdBuf, sizeof(callIdBuf), "%llx", callId);
+
+        // Create JXValue arguments to the call-script function: callback pointer and script code string.
+        JXValue args[2];
+        JX_New(&args[0]);
+        JX_New(&args[1]);
+        JX_SetString(&args[0], callIdBuf);
+        JX_SetString(&args[1], scriptCode.c_str(), static_cast<int>(scriptCode.size()));
+
+        // Invoke the script function that will evaluate the provided script code then callback
+        // via the result or error callback.
+        JXValue unusedResult;
+        if (JX_CallFunction(reinterpret_cast<JXValue*>(_callScriptFunction), args, 2, &unusedResult))
+        {
+            JX_Free(&unusedResult);
+            LogVerbose("Successfully evaluated script code.");
+        }
+        else
+        {
+            LogErrorAndThrow("Failed to evaluate script code.");
+        }
+
+        JX_Free(&args[0]);
+        JX_Free(&args[1]);
+        JX_Loop();
+    }
+    catch (...)
+    {
+        callback(nullptr, std::current_exception());
+    }
+}
+
+void JXCoreEngine::RegisterCallFromScriptInternal(
+    std::string scriptFunctionName,
+    std::function<void(std::string argsJson)> callback)
+{
+    try
+    {
+        std::function<void(std::string)>* callbackPtr = new std::function<void(std::string)>(callback);
+
+        // The callback function pointer is passed through JavaScript as a hex-formatted number.
+        unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
+        const char scriptFunctionFormat[] =
+        "function %s() {"
+        "process.natives.jxcall('%llx', arguments);"
+        "}";
+
+        size_t scriptBufSize = scriptFunctionName.size() + sizeof(scriptFunctionFormat) + 20;
+        std::vector<char> scriptBuf(scriptBufSize);
+        snprintf(scriptBuf.data(), scriptBufSize, scriptFunctionFormat, scriptFunctionName.c_str(), callId);
+
+        // Evaluate the script, which defines the named function as invoking the script call callback.
+        JXValue unusedResult;
+        if (!JX_Evaluate(scriptBuf.data(), nullptr, &unusedResult))
+        {
+            LogErrorAndThrow("Failed to evaluate script callback code.");
+        }
+
+        JX_Loop();
+    }
+    catch (...)
+    {
+        LogError("Failed to register call from script.");
+    }
 }
