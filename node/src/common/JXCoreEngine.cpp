@@ -48,7 +48,7 @@ const char* callScriptFunctionCode =
     "})";
 
 /// Callback invoked by JavaScript calls to console.log (overridden by main.js).
-void JXLogCallback(JXValue* result, int argc)
+void JXLogCallback(JXValue* argv, int argc)
 {
     if (argc != 2)
     {
@@ -56,13 +56,13 @@ void JXLogCallback(JXValue* result, int argc)
         return;
     }
 
-    LogSeverity severity = static_cast<LogSeverity>(JX_GetInt32(result));
-    const char* message = JX_GetString(result + 1);
+    LogSeverity severity = static_cast<LogSeverity>(JX_GetInt32(argv));
+    const char* message = JX_GetString(argv + 1);
     Log(severity, message);
 }
 
 /// Callback invoked with the result of evaluation of caller's JavaScript code.
-void JXResultCallback(JXValue* result, int argc)
+void JXResultCallback(JXValue* argv, int argc)
 {
     if (argc != 2)
     {
@@ -70,7 +70,7 @@ void JXResultCallback(JXValue* result, int argc)
         return;
     }
 
-    const char* callIdHex = JX_GetString(result);
+    const char* callIdHex = JX_GetString(argv);
     unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
@@ -78,7 +78,9 @@ void JXResultCallback(JXValue* result, int argc)
         return;
     }
 
-    const char* resultJson = JX_GetString(result + 1);
+    const char* resultJson = JX_GetString(argv + 1);
+
+    LogTrace("JXResultCallback(\"%s\", \"%s\")", callIdHex, resultJson);
 
     std::function<void(std::string, std::exception_ptr)>* callbackPtr =
         reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
@@ -97,7 +99,7 @@ void JXResultCallback(JXValue* result, int argc)
 }
 
 /// Callback invoked when evaluation of caller's JavaScript code threw an error.
-void JXErrorCallback(JXValue* result, int argc)
+void JXErrorCallback(JXValue* argv, int argc)
 {
     if (argc != 2)
     {
@@ -105,8 +107,8 @@ void JXErrorCallback(JXValue* result, int argc)
         return;
     }
 
-    const char* callIdHex = JX_GetString(result);
-    uintptr_t callId = std::strtoul(callIdHex, nullptr, 16);
+    const char* callIdHex = JX_GetString(argv);
+    unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
         LogWarning("Invalid result callback ID.");
@@ -116,28 +118,26 @@ void JXErrorCallback(JXValue* result, int argc)
     // Get the message property from the JavaScript Error object (2nd argument), if available.
     JXValue errorMessageValue;
     JX_New(&errorMessageValue);
-    JX_GetNamedProperty(result + 1, "message", &errorMessageValue);
+    JX_GetNamedProperty(argv + 1, "message", &errorMessageValue);
     const char* errorMessage = JX_GetString(&errorMessageValue);
 
-    std::function<void(std::string, std::exception_ptr) > * callbackPtr =
+    LogTrace("JXErrorCallback(\"%s\", \"%s\")", callIdHex, (errorMessage != nullptr ? errorMessage : ""));
+
+    std::function<void(std::string, std::exception_ptr)>* callbackPtr =
         reinterpret_cast<std::function<void(std::string, std::exception_ptr)>*>(callId);
+
+    // Convert the JavaScript Error to a std::runtime_error with the same message.
+    std::exception_ptr ex = std::make_exception_ptr(
+        errorMessage ? std::runtime_error(errorMessage) : std::runtime_error("Unknown script error."));
     try
     {
-        // Convert the JavaScript Error to a std::runtime_error with the same message.
-        throw (errorMessage ? std::runtime_error(errorMessage) : std::runtime_error("Unknown script error."));
+        // Since this was a failed evaluation, the first parameter passed to the callback (the result)
+        // is empty, and the second is the exception pointer.
+        (*callbackPtr)(std::string(), ex);
     }
     catch (...)
     {
-        try
-        {
-            // Since this was a failed evaluation, the first parameter passed to the callback (the result)
-            // is null, and the second is the exception pointer.
-            (*callbackPtr)(nullptr, std::current_exception());
-        }
-        catch (...)
-        {
-            LogWarning("Script error callback function threw an exception.");
-        }
+        LogWarning("Script error callback function threw an exception.");
     }
 
     JX_Free(&errorMessageValue);
@@ -145,7 +145,7 @@ void JXErrorCallback(JXValue* result, int argc)
 }
 
 /// Callback invoked when JavaScript code calls a function that was registered as a call from script.
-void JXCallCallback(JXValue* result, int argc)
+void JXCallCallback(JXValue* argv, int argc)
 {
     if (argc != 2)
     {
@@ -153,7 +153,7 @@ void JXCallCallback(JXValue* result, int argc)
         return;
     }
 
-    const char* callIdHex = JX_GetString(result);
+    const char* callIdHex = JX_GetString(argv);
     unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
@@ -161,7 +161,7 @@ void JXCallCallback(JXValue* result, int argc)
         return;
     }
 
-    const char* argsJson = JX_GetString(result + 1);
+    const char* argsJson = JX_GetString(argv + 1);
 
     std::function<void(std::string)>* callbackPtr = reinterpret_cast<std::function<void(std::string)>*>(callId);
     try
@@ -423,9 +423,12 @@ void JXCoreEngine::RegisterCallFromScriptInternal(
 
         // The callback function pointer is passed through JavaScript as a hex-formatted number.
         unsigned long long callId = reinterpret_cast<unsigned long long>(callbackPtr);
+
+        // Note the Array.prototype.slice is necessary for proper array JSON-serialization
+        // because arguments is only an array-like object, not actually an array.
         const char scriptFunctionFormat[] =
         "function %s() {"
-        "process.natives.jxcall('%llx', arguments);"
+            "process.natives.jxcall('%llx', JSON.stringify(Array.prototype.slice.call(arguments)));"
         "}";
 
         size_t scriptBufSize = scriptFunctionName.size() + sizeof(scriptFunctionFormat) + 20;

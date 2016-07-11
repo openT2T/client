@@ -128,7 +128,7 @@ using namespace OpenT2T;
             {
                 LogTrace("start failed");
                 NSError* error;
-                ExceptionToNSError(std::current_exception(), &error);
+                ExceptionToNSError(ex, &error);
                 failure(error);
             }
         });
@@ -158,7 +158,7 @@ using namespace OpenT2T;
             {
                 LogTrace("stop failed");
                 NSError* error;
-                ExceptionToNSError(std::current_exception(), &error);
+                ExceptionToNSError(ex, &error);
                 failure(error);
             }
         });
@@ -199,7 +199,7 @@ using namespace OpenT2T;
             {
                 LogTrace("callScript failed");
                 NSError* error;
-                ExceptionToNSError(std::current_exception(), &error);
+                ExceptionToNSError(ex, &error);
                 failure(error);
             }
         });

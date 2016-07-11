@@ -24,6 +24,7 @@ public class NodeEngine {
     private HashSet<NodeCallListener> callFromScriptListeners;
 
     public NodeEngine() {
+        this.callFromScriptListeners = new HashSet<NodeCallListener>();
         this.init();
     }
 
