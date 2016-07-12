@@ -49,14 +49,21 @@ namespace OpenT2T.Test
             await ExpectResultAsync(message, () => node.CallScriptAsync("(function () { return " + message + "; })()"));
 
             currentTest = "NodeEngine.RegisterCallFromScript()";
-            string args = null;
-            node.CallFromScript += (source, e) => { args = e.ArgsJson; };
+            string callbackArgs = null;
+            node.CallFromScript += (source, e) => { callbackArgs = e.ArgsJson; };
             Expect(() => node.RegisterCallFromScript("testTest"));
             await ExpectAsync(() => node.CallScriptAsync("testTest(null, 0, 'test');"));
-            ExpectResult("[null,0,\"test\"]", () => args);
+            ExpectResult("[null,0,\"test\"]", () => callbackArgs);
 
             currentTest = "NodeEngine.CallScriptAsync(error)";
             await ExpectExceptionAsync(() => node.CallScriptAsync("throw new Error('test');"));
+
+            currentTest = "NodeEngine.DefineScriptFile()";
+            callbackArgs = null;
+            Expect(() => node.DefineScriptFile("test.js", "testTest(123);"));
+            await ExpectAsync(() => node.CallScriptAsync("require('test.js');"));
+            ExpectResult("[123]", () => callbackArgs);
+
         }
     }
 }

@@ -38,34 +38,47 @@ Platform::Exception^ ExceptionToPlatformException(std::exception_ptr ex)
     }
     catch (Platform::Exception^ pex)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(%s)", PlatformStringToString(pex->Message).c_str());
         return pex;
     }
     catch (const std::out_of_range& stdex)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(\"%s\")", stdex.what());
         return ref new Platform::OutOfBoundsException(StringToPlatformString(stdex.what()));
     }
     catch (const std::length_error& stdex)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(\"%s\")", stdex.what());
         return ref new Platform::OutOfBoundsException(StringToPlatformString(stdex.what()));
     }
     catch (const std::invalid_argument& stdex)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(\"%s\")", stdex.what());
         return ref new Platform::InvalidArgumentException(StringToPlatformString(stdex.what()));
     }
     catch (const std::bad_cast& stdex)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(\"%s\")", stdex.what());
         return ref new Platform::InvalidCastException(StringToPlatformString(stdex.what()));
     }
     catch (const std::logic_error& stdex)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(\"%s\")", stdex.what());
         return Platform::Exception::CreateException(E_NOT_VALID_STATE, StringToPlatformString(stdex.what()));
+    }
+    catch (const std::runtime_error& stdex)
+    {
+        OpenT2T::LogTrace("ExceptionToPlatformException(\"%s\")", stdex.what());
+        return ref new Platform::FailureException(StringToPlatformString(stdex.what()));
     }
     catch (const std::exception& stdex)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(\"%s\")", stdex.what());
         return ref new Platform::FailureException(StringToPlatformString(stdex.what()));
     }
     catch (...)
     {
+        OpenT2T::LogTrace("ExceptionToPlatformException(unknown)");
         return ref new Platform::FailureException();
     }
 }

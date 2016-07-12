@@ -32,6 +32,10 @@ void ExceptionToNSError(std::exception_ptr ex, NSError** outError)
         {
             description = [NSString stringWithUTF8String: stdex.what()];
         }
+        catch (const std::runtime_error& stdex)
+        {
+            description = [NSString stringWithUTF8String: stdex.what()];
+        }
         catch (const std::exception& stdex)
         {
             description = [NSString stringWithUTF8String: stdex.what()];

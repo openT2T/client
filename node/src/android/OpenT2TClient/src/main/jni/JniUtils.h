@@ -83,6 +83,10 @@ jthrowable exceptionToJavaException(JNIEnv* env, std::exception_ptr ex)
     {
         return newJavaException(env, "java/lang/IllegalStateException", stdex.what());
     }
+    catch (const std::runtime_error& stdex)
+    {
+        return newJavaException(env, "java/lang/Exception", stdex.what());
+    }
     catch (const std::exception& stdex)
     {
         return newJavaException(env, "java/lang/Exception", stdex.what());

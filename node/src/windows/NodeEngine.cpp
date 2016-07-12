@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
-#include "WinrtUtils.h"
 #include "Log.h"
+#include "WinrtUtils.h"
 #include "INodeEngine.h"
 #include "NodeEngine.h"
 #include "AsyncQueue.h"
@@ -23,7 +23,9 @@ static struct _init
 
         OpenT2T::logHandler = [](LogSeverity severity, const char* message)
         {
-            ::OutputDebugStringA(message);
+            std::string messageWithNewLine(message);
+            messageWithNewLine += "\n";
+            ::OutputDebugStringA(messageWithNewLine.c_str());
         };
     }
 } _staticInit;
