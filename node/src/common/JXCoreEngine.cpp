@@ -23,20 +23,25 @@ const char* mainScriptFileName = "main.js";
 /// JavaScript contents of the "main.js" script for JXCore. It doesn't do much; most execution should be
 /// driven by defining additional named script files and directly evaluating script code strings.
 const char* mainScriptCode =
-    // Override console methods to redirect to the console callback.
+    // Override console methods to redirect to the logging callback.
     // Note the constants here must correspond to the LogSeverity enum values.
-    "global.console = {"
-        "error: function (msg) { process.natives.jxlog(1, msg); },"
-        "warn: function (msg) { process.natives.jxlog(2, msg); },"
-        "info: function (msg) { process.natives.jxlog(3, msg); },"
-        "log: function (msg) { process.natives.jxlog(4, msg); }"
-    "};";
+    "console.error = function (msg) { process.natives.jxlog(1, msg); };"
+    "console.warn = function (msg) { process.natives.jxlog(2, msg); };"
+    "console.info = function (msg) { process.natives.jxlog(3, msg); };"
+    "console.log = function (msg) { process.natives.jxlog(4, msg); };"
+
+    // Save the main module object and require function in globals so they are available to evaluated scripts.
+    "global.module = module;"
+    "global.require = require;"
+
+    "console.log('JXCore: Loaded main.js.');"
+    ;
 
 /// JavaScript code for a function that evaluates the caller's script code and returns the result (or error)
 /// via a callback.
 const char* callScriptFunctionCode =
     "(function (callId, scriptCode) {"
-        "var resultJson;"
+    "var resultJson;"
         "try {"
             "var result = eval(scriptCode);"
             "resultJson = JSON.stringify(result);"
