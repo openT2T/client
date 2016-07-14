@@ -87,7 +87,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_staticInit(
                 break;
         }
 
-        __android_log_print(androidLogLevel, logTag, message);
+        __android_log_write(androidLogLevel, logTag, message);
     };
 }
 
@@ -154,7 +154,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_start(
                     rejectPromise(
                             env,
                             promise,
-                            exceptionToJavaException(env, std::current_exception()));
+                            exceptionToJavaException(env, ex));
                 }
 
                 env->DeleteGlobalRef(promise);
@@ -199,7 +199,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_stop(
                     rejectPromise(
                             env,
                             promise,
-                            exceptionToJavaException(env, std::current_exception()));
+                            exceptionToJavaException(env, ex));
                 }
 
                 env->DeleteGlobalRef(promise);
@@ -245,7 +245,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_callScript(
                     rejectPromise(
                             env,
                             promise,
-                            exceptionToJavaException(env, std::current_exception()));
+                            exceptionToJavaException(env, ex));
                 }
 
                 env->DeleteGlobalRef(promise);
@@ -273,6 +273,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
     if (nodeEngine != nullptr)
     {
         scriptFunctionName = reinterpret_cast<jstring>(env->NewGlobalRef(scriptFunctionName));
+        thiz = env->NewGlobalRef(thiz);
         try
         {
             nodeEngine->RegisterCallFromScript(scriptFunctionNameChars, [=](std::string argsJson)
@@ -293,7 +294,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_registerCallFromScript(
                         thiz, raiseCallFromScriptMethod, scriptFunctionName, argsJsonString);
                 if (env->ExceptionOccurred())
                 {
-                    OpenT2T::LogError("raiseCallFromScript threw exception");
+                    LogError("raiseCallFromScript threw exception");
                     env->ExceptionClear();
                 }
 
