@@ -5,6 +5,11 @@ import android.util.Log;
 import java.util.HashSet;
 import java.util.concurrent.Future;
 
+/**
+ * APIs for interacting with a node engine hosted in the application.
+ * Wrapper around the cross-platform C++ INodeEngine interface.
+ * (See INodeEngine.h for interface documentation.)
+ */
 public class NodeEngine {
     private static final String TAG = "OpenT2T.NodeEngine";
 

@@ -2,17 +2,26 @@
 
 namespace OpenT2T
 {
+    /// <summary>
+    /// Event raised when a registered function is called by script.
+    /// </summary>
     public ref class NodeCallEvent sealed
     {
     internal:
         NodeCallEvent(Platform::String^ functionName, Platform::String^ argsJson);
 
     public:
+        /// <summary>
+        /// Name of the function that was called by script.
+        /// </summary>
         property Platform::String^ FunctionName
         {
             Platform::String^ get();
         }
 
+        /// <summary>
+        /// JSON-serialized array of arguments passed by the script.
+        /// </summary>
         property Platform::String^ ArgsJson
         {
             Platform::String^ get();
@@ -23,6 +32,11 @@ namespace OpenT2T
         Platform::String^ argsJson;
     };
 
+    /// <summary>
+    /// APIs for interacting with a node engine hosted in the application.
+    /// Wrapper around the cross-platform C++ INodeEngine interface.
+    /// (See INodeEngine.h for interface documentation.)
+    /// </summary>
     public ref class NodeEngine sealed
     {
     public:

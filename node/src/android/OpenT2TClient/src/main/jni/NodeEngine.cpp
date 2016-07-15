@@ -1,3 +1,4 @@
+// Native methods for the NodeEngine Java class
 
 #include <cstdlib>
 #include <exception>

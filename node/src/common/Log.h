@@ -16,13 +16,15 @@ enum class LogSeverity
 };
 
 /// Function to be invoked with the log severity and message whenever OpenT2T::Log() is invoked.
-/// Typically this is used to route logging calls to appropriate platform-specific logs, e.g. Android
-/// logcat or iOS NSLog. By default the handler is null, meaning logging calls are simply ignored.
+/// Typically this is used to route logging calls to appropriate platform-specific logs,
+/// e.g. Android logcat or iOS NSLog. By default the handler is null, meaning logging calls
+/// are simply ignored.
 extern std::function<void(LogSeverity severity, const char* message)> logHandler;
 
-/// Severity level for logging calls to be passed on to the registered log handler, if any. The default
-/// is LogSeverity::None, meaning no calls are passed on. For example, setting this log level to Warning
-/// causes Error and Warning calls to be passed on, while Info, Verbose, and Trace calls are suppressed.
+/// Severity level for logging calls to be passed on to the registered log handler, if any.
+/// The default is LogSeverity::None, meaning no calls are passed on. For example, setting
+/// this log level to Warning causes Error and Warning calls to be passed on, while Info,
+/// Verbose, and Trace calls are suppressed.
 extern LogSeverity logLevel;
 
 /// Logs a message at the specified severity level.
