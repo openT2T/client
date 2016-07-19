@@ -395,22 +395,26 @@ void JXCoreEngine::CallScriptInternal(
         JX_SetString(&args[0], callIdBuf);
         JX_SetString(&args[1], scriptCode.c_str(), static_cast<int>(scriptCode.size()));
 
+        JXValue unusedResult;
+        JX_New(&unusedResult);
+
         // Invoke the script function that will evaluate the provided script code then callback
         // via the result or error callback.
-        JXValue unusedResult;
-        if (JX_CallFunction(reinterpret_cast<JXValue*>(_callScriptFunction), args, 2, &unusedResult))
+        bool evaluated = JX_CallFunction(reinterpret_cast<JXValue*>(_callScriptFunction), args, 2, &unusedResult);
+
+        JX_Free(&unusedResult);
+        JX_Free(&args[0]);
+        JX_Free(&args[1]);
+
+        if (evaluated)
         {
-            JX_Free(&unusedResult);
             LogVerbose("Successfully evaluated script code.");
+            JX_LoopOnce();
         }
         else
         {
             LogErrorAndThrow("Failed to evaluate script code.");
         }
-
-        JX_Free(&args[0]);
-        JX_Free(&args[1]);
-        JX_Loop();
     }
     catch (...)
     {
@@ -440,14 +444,22 @@ void JXCoreEngine::RegisterCallFromScriptInternal(
         std::vector<char> scriptBuf(scriptBufSize);
         snprintf(scriptBuf.data(), scriptBufSize, scriptFunctionFormat, scriptFunctionName.c_str(), callId);
 
-        // Evaluate the script, which defines the named function as invoking the script call callback.
         JXValue unusedResult;
-        if (!JX_Evaluate(scriptBuf.data(), nullptr, &unusedResult))
+        JX_New(&unusedResult);
+
+        // Evaluate the script, which defines the named function as invoking the script call callback.
+        bool evaluated = JX_Evaluate(scriptBuf.data(), nullptr, &unusedResult);
+
+        JX_Free(&unusedResult);
+
+        if (evaluated)
+        {
+            JX_LoopOnce();
+        }
+        else
         {
             LogErrorAndThrow("Failed to evaluate script callback code.");
         }
-
-        JX_Loop();
     }
     catch (...)
     {

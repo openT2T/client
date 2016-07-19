@@ -31,3 +31,6 @@ packages/
 
 # Node.js installed modules
 /node_modules
+
+# Other
+*.bak
