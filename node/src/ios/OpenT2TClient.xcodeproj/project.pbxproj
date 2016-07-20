@@ -1,0 +1,286 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		96BA5E481D277D09001D9EB0 /* OpenT2TClient.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 96BA5E471D277D09001D9EB0 /* OpenT2TClient.h */; };
+		96BA5E521D277F0B001D9EB0 /* OT2TNodeEngine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 96BA5E511D277F0B001D9EB0 /* OT2TNodeEngine.mm */; };
+		96BA5E571D278950001D9EB0 /* JXCoreEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 96BA5E551D278950001D9EB0 /* JXCoreEngine.cpp */; };
+		96BA5E5A1D27939B001D9EB0 /* Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 96BA5E591D27939B001D9EB0 /* Log.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		96BA5E421D277D09001D9EB0 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+				96BA5E481D277D09001D9EB0 /* OpenT2TClient.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		96BA5E441D277D09001D9EB0 /* libOpenT2TClient.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenT2TClient.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		96BA5E471D277D09001D9EB0 /* OpenT2TClient.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OpenT2TClient.h; sourceTree = "<group>"; };
+		96BA5E501D277F0B001D9EB0 /* OT2TNodeEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OT2TNodeEngine.h; sourceTree = "<group>"; };
+		96BA5E511D277F0B001D9EB0 /* OT2TNodeEngine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OT2TNodeEngine.mm; sourceTree = "<group>"; };
+		96BA5E541D278950001D9EB0 /* INodeEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = INodeEngine.h; path = ../../common/INodeEngine.h; sourceTree = "<group>"; };
+		96BA5E551D278950001D9EB0 /* JXCoreEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JXCoreEngine.cpp; path = ../../common/JXCoreEngine.cpp; sourceTree = "<group>"; };
+		96BA5E561D278950001D9EB0 /* JXCoreEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JXCoreEngine.h; path = ../../common/JXCoreEngine.h; sourceTree = "<group>"; };
+		96BA5E581D279042001D9EB0 /* Log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Log.h; path = ../../common/Log.h; sourceTree = "<group>"; };
+		96BA5E591D27939B001D9EB0 /* Log.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Log.cpp; path = ../../common/Log.cpp; sourceTree = "<group>"; };
+		96BA5E5B1D27A808001D9EB0 /* ObjCppUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjCppUtils.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		96BA5E411D277D09001D9EB0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		96BA5E3B1D277D09001D9EB0 = {
+			isa = PBXGroup;
+			children = (
+				96BA5E461D277D09001D9EB0 /* OpenT2TClient */,
+				96BA5E451D277D09001D9EB0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		96BA5E451D277D09001D9EB0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				96BA5E441D277D09001D9EB0 /* libOpenT2TClient.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		96BA5E461D277D09001D9EB0 /* OpenT2TClient */ = {
+			isa = PBXGroup;
+			children = (
+				96BA5E581D279042001D9EB0 /* Log.h */,
+				96BA5E591D27939B001D9EB0 /* Log.cpp */,
+				96BA5E541D278950001D9EB0 /* INodeEngine.h */,
+				96BA5E561D278950001D9EB0 /* JXCoreEngine.h */,
+				96BA5E551D278950001D9EB0 /* JXCoreEngine.cpp */,
+				96BA5E501D277F0B001D9EB0 /* OT2TNodeEngine.h */,
+				96BA5E511D277F0B001D9EB0 /* OT2TNodeEngine.mm */,
+				96BA5E5B1D27A808001D9EB0 /* ObjCppUtils.h */,
+				96BA5E471D277D09001D9EB0 /* OpenT2TClient.h */,
+			);
+			path = OpenT2TClient;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		96BA5E431D277D09001D9EB0 /* OpenT2TClient */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 96BA5E4D1D277D09001D9EB0 /* Build configuration list for PBXNativeTarget "OpenT2TClient" */;
+			buildPhases = (
+				96BA5E401D277D09001D9EB0 /* Sources */,
+				96BA5E411D277D09001D9EB0 /* Frameworks */,
+				96BA5E421D277D09001D9EB0 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenT2TClient;
+			productName = OpenT2TClient;
+			productReference = 96BA5E441D277D09001D9EB0 /* libOpenT2TClient.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		96BA5E3C1D277D09001D9EB0 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0730;
+				ORGANIZATIONNAME = OpenT2T;
+				TargetAttributes = {
+					96BA5E431D277D09001D9EB0 = {
+						CreatedOnToolsVersion = 7.3.1;
+					};
+				};
+			};
+			buildConfigurationList = 96BA5E3F1D277D09001D9EB0 /* Build configuration list for PBXProject "OpenT2TClient" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 96BA5E3B1D277D09001D9EB0;
+			productRefGroup = 96BA5E451D277D09001D9EB0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				96BA5E431D277D09001D9EB0 /* OpenT2TClient */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		96BA5E401D277D09001D9EB0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				96BA5E5A1D27939B001D9EB0 /* Log.cpp in Sources */,
+				96BA5E571D278950001D9EB0 /* JXCoreEngine.cpp in Sources */,
+				96BA5E521D277F0B001D9EB0 /* OT2TNodeEngine.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		96BA5E4B1D277D09001D9EB0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		96BA5E4C1D277D09001D9EB0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		96BA5E4E1D277D09001D9EB0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					../common,
+					../external,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_MODULE_NAME = OpenT2TClient;
+				PRODUCT_NAME = OpenT2TClient;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		96BA5E4F1D277D09001D9EB0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					../common,
+					../external,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_MODULE_NAME = OpenT2TClient;
+				PRODUCT_NAME = OpenT2TClient;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		96BA5E3F1D277D09001D9EB0 /* Build configuration list for PBXProject "OpenT2TClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96BA5E4B1D277D09001D9EB0 /* Debug */,
+				96BA5E4C1D277D09001D9EB0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		96BA5E4D1D277D09001D9EB0 /* Build configuration list for PBXNativeTarget "OpenT2TClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96BA5E4E1D277D09001D9EB0 /* Debug */,
+				96BA5E4F1D277D09001D9EB0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 96BA5E3C1D277D09001D9EB0 /* Project object */;
+}

@@ -1,0 +1,17 @@
+{
+  "name": "opent2t-client",
+  "version": "0.1.0",
+  "description": "OpenT2T Client Lib",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "opent2t"
+  ],
+  "author": "jasongin@microsoft.com",
+  "license": "MIT"
+}

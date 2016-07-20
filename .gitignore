@@ -1,0 +1,36 @@
+# Android Studio preferences and intermediate files
+*.iml
+.gradle/
+local.properties
+**/.idea/workspace.xml
+**/.idea/dictionaries
+**/.idea/tasks.xml
+**/.idea/libraries
+**/.idea/gradle.xml
+build/
+
+# XCode preferences and intermediate files
+*.userprefs
+*.xcworkspacedata
+xcuserdata/
+*.cache
+*.ipch
+*.sdf
+.DS_Store
+
+# Visual Studio preferences and intermediate files
+.vs/
+.vscode/
+bin/
+obj/
+ipch/
+project.lock.json
+*.VC.*db
+packages/
+*.*proj.user
+
+# Node.js installed modules
+/node_modules
+
+# Other
+*.bak

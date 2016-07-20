@@ -1,0 +1,18 @@
+#!/bin/bash
+JXCORELIBURI="https://github.com/jasongin/jxcore/releases/download/v0.3.1.2/libjxcore.zip"
+JXCOREDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+JXCORELIBZIP="$JXCOREDIR/libjxcore.zip"
+JXCORELIBDIR="$JXCOREDIR/lib"
+
+echo "Downloading JXCore lib files from $JXCORELIBURI..."
+curl -# -L "$JXCORELIBURI" > "$JXCORELIBZIP"
+
+echo "Extracting JXCore lib files to $JXCORELIBDIR..."
+mkdir -p "$JXCORELIBDIR"
+unzip -o "$JXCORELIBZIP" -d "$JXCORELIBDIR"
+
+# Workaround missing Android mips lib file in the zip
+mkdir -p "$JXCORELIBDIR/Android/mips"
+touch "$JXCORELIBDIR/Android/mips/libjxcore.so"
+
+echo "Done."

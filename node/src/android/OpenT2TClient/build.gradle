@@ -1,0 +1,79 @@
+apply plugin: 'com.android.model.library'
+
+model {
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion.apiLevel 19
+        targetSdkVersion.apiLevel 23
+        versionCode 1
+        versionName "1.0"
+    }
+
+    ndk {
+        moduleName "NodeEngine"
+        abiFilters.add("armeabi")
+        abiFilters.add("armeabi-v7")
+        abiFilters.add("x86")
+        stl "c++_static"
+        ldLibs.add("log")
+        ldLibs.add("z")
+        ldLibs.add("m")
+        ldLibs.add("atomic")
+        cppFlags.add("-fexceptions")
+        cppFlags.add("-I" + file("../../common"))
+        cppFlags.add("-I" + file("../../external"))
+    }
+
+    sources {
+        main {
+            jni {
+                source {
+                    srcDir "../../common"
+                }
+                dependencies {
+                    library "libjxcore"
+                }
+            }
+            jniLibs {
+                dependencies {
+                    library "libjxcore"
+                }
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            ndk {
+                cppFlags.add("-DDEBUG")
+            }
+        }
+        release {
+            minifyEnabled false
+            useProguard false
+            proguardFiles.add(file('proguard-rules.pro'))
+        }
+    }
+}
+
+repositories {
+    libs(PrebuiltLibraries) {
+        libjxcore {
+            binaries.withType(SharedLibraryBinary) {
+                sharedLibraryFile = file(
+                    "../../external/jxcore/lib/Android/" +
+                    "${targetPlatform.getName()}/libjxcore.so")
+            }
+        }
+    }
+}
+
+}
+
+dependencies {
+    compile fileTree(dir: "libs", include: ["*.jar"])
+}
