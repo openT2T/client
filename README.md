@@ -13,6 +13,8 @@ interface. Below this interface one or more node engine implementations may exis
 on the platform. Above this interface are application-level APIs for using that interface directly and
 for accessing OpenT2T JS APIs through it.
 
+You will need to grab jx.lib as this project has a dependency on it. To do that, run the following powershell script on the external directory included in this repo: openT2T\client\node\src\external\jxcore\DownloadJxcoreLib.ps1
+
 ## Multi-platform and cross-platform APIs
 There are library projects for [Android](./node/src/android), [iOS](./node/src/ios), and
 [Windows](./node/src/windows) that expose the NodeJS engine and OpenT2T APIs in the corresponding
