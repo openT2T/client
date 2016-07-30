@@ -18,7 +18,7 @@
 #include "AsyncQueue.h"
 #include "WorkItemDispatcher.h"
 #include "INodeEngine.h"
-#include "JXCoreEngine.h"
+#include "NodeCoreEngine.h"
 #include "JniUtils.h"
 
 using namespace OpenT2T;
@@ -97,7 +97,7 @@ JNIEXPORT void JNICALL Java_io_opent2t_NodeEngine_init(
 {
     LogTrace("init()");
 
-    INodeEngine* nodeEngine = new JXCoreEngine();
+    INodeEngine* nodeEngine = new NodeCoreEngine();
     setNodeEngine(env, thiz, nodeEngine);
 }
 

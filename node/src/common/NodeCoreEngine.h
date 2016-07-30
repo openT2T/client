@@ -2,12 +2,12 @@
 namespace OpenT2T
 {
 
-/// Implementation of the INodeEngine interface using the JXCore hosting APIs.
-class JXCoreEngine : public INodeEngine
+/// Implementation of the INodeEngine interface using the Node hosting APIs.
+class NodeCoreEngine : public INodeEngine
 {
 public:
-    JXCoreEngine();
-    ~JXCoreEngine();
+    NodeCoreEngine();
+    ~NodeCoreEngine();
 
     void DefineScriptFile(std::string scriptFileName, std::string scriptCode) override;
 
@@ -32,13 +32,13 @@ private:
         std::string scriptFunctionName,
         std::function<void(std::string argsJson)> callback);
 
-    /// Tracks whether JXCore's one-time initialization has been invoked.
+    /// Tracks whether Node's one-time initialization has been invoked.
     static std::once_flag _initOnce;
 
     /// Working directory used for the one-time initialization.
     static std::string _workingDirectory;
 
-    /// Dispatches calls to a thread dedicated to the JXCore engine instance.
+    /// Dispatches calls to a thread dedicated to the Node engine instance.
     WorkItemDispatcher _dispatcher;
 
     /// Tracks script files that are defined before the engine is started.
@@ -50,7 +50,7 @@ private:
     /// Tracks whether the engine has been started.
     bool _started;
 
-    /// Pointer to a JXValue representing a JavaScript function used to evaluate script code in the engine.
+    /// Pointer to a JS_Value representing a JavaScript function used to evaluate script code in the engine.
     void* _callScriptFunction;
 };
 

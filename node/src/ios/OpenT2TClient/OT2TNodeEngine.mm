@@ -14,7 +14,7 @@
 #include "AsyncQueue.h"
 #include "WorkItemDispatcher.h"
 #include "INodeEngine.h"
-#include "JXCoreEngine.h"
+#include "NodeCoreEngine.h"
 
 #import "OT2TNodeEngine.h"
 #import "ObjCppUtils.h"
@@ -72,7 +72,7 @@ using namespace OpenT2T;
     self = [super init];
     if (self)
     {
-        _node = new OpenT2T::JXCoreEngine();
+        _node = new OpenT2T::NodeCoreEngine();
         _callFromScriptListeners = [[NSHashTable<OT2TNodeCallListener> alloc] init];
     }
     return self;
