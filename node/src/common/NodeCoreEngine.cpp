@@ -12,15 +12,15 @@
 #include "INodeEngine.h"
 #include "AsyncQueue.h"
 #include "WorkItemDispatcher.h"
-#include "JXCoreEngine.h"
+#include "NodeCoreEngine.h"
 
-#include "jxcore/jx.h"
+#include "node_wrapper.h"
 
 using namespace OpenT2T;
 
 const char* mainScriptFileName = "main.js";
 
-/// JavaScript contents of the "main.js" script for JXCore. It doesn't do much; most execution should be
+/// JavaScript contents of the "main.js" script for Node. It doesn't do much; most execution should be
 /// driven by defining additional named script files and directly evaluating script code strings.
 const char* mainScriptCode =
     // Override console methods to redirect to the logging callback.
@@ -34,7 +34,7 @@ const char* mainScriptCode =
     "global.module = module;"
     "global.require = require;"
 
-    "console.log('JXCore: Loaded main.js.');"
+    "console.log('Node: Loaded main.js.');"
     ;
 
 /// JavaScript code for a function that evaluates the caller's script code and returns the result (or error)
@@ -53,7 +53,7 @@ const char* callScriptFunctionCode =
     "})";
 
 /// Callback invoked by JavaScript calls to console.log (overridden by main.js).
-void JXLogCallback(JXValue* argv, int argc)
+void JXLogCallback(JS_Value* argv, int argc)
 {
     if (argc != 2)
     {
@@ -61,13 +61,13 @@ void JXLogCallback(JXValue* argv, int argc)
         return;
     }
 
-    LogSeverity severity = static_cast<LogSeverity>(JX_GetInt32(argv));
-    const char* message = JX_GetString(argv + 1);
+    LogSeverity severity = static_cast<LogSeverity>(JS_GetInt32(argv));
+    const char* message = JS_GetString(argv + 1);
     Log(severity, message);
 }
 
 /// Callback invoked with the result of evaluation of caller's JavaScript code.
-void JXResultCallback(JXValue* argv, int argc)
+void JXResultCallback(JS_Value* argv, int argc)
 {
     if (argc != 2)
     {
@@ -75,7 +75,7 @@ void JXResultCallback(JXValue* argv, int argc)
         return;
     }
 
-    const char* callIdHex = JX_GetString(argv);
+    const char* callIdHex = JS_GetString(argv);
     unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
@@ -83,7 +83,7 @@ void JXResultCallback(JXValue* argv, int argc)
         return;
     }
 
-    const char* resultJson = JX_GetString(argv + 1);
+    const char* resultJson = JS_GetString(argv + 1);
 
     LogTrace("JXResultCallback(\"%s\", \"%s\")", callIdHex, resultJson);
 
@@ -104,7 +104,7 @@ void JXResultCallback(JXValue* argv, int argc)
 }
 
 /// Callback invoked when evaluation of caller's JavaScript code threw an error.
-void JXErrorCallback(JXValue* argv, int argc)
+void JXErrorCallback(JS_Value* argv, int argc)
 {
     if (argc != 2)
     {
@@ -112,7 +112,7 @@ void JXErrorCallback(JXValue* argv, int argc)
         return;
     }
 
-    const char* callIdHex = JX_GetString(argv);
+    const char* callIdHex = JS_GetString(argv);
     unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
@@ -121,10 +121,10 @@ void JXErrorCallback(JXValue* argv, int argc)
     }
 
     // Get the message property from the JavaScript Error object (2nd argument), if available.
-    JXValue errorMessageValue;
-    JX_New(&errorMessageValue);
-    JX_GetNamedProperty(argv + 1, "message", &errorMessageValue);
-    const char* errorMessage = JX_GetString(&errorMessageValue);
+    JS_Value errorMessageValue;
+    JS_New(&errorMessageValue);
+    JS_GetNamedProperty(argv + 1, "message", &errorMessageValue);
+    const char* errorMessage = JS_GetString(&errorMessageValue);
 
     LogTrace("JXErrorCallback(\"%s\", \"%s\")", callIdHex, (errorMessage != nullptr ? errorMessage : ""));
 
@@ -145,12 +145,12 @@ void JXErrorCallback(JXValue* argv, int argc)
         LogWarning("Script error callback function threw an exception.");
     }
 
-    JX_Free(&errorMessageValue);
+    JS_Free(&errorMessageValue);
     delete callbackPtr;
 }
 
 /// Callback invoked when JavaScript code calls a function that was registered as a call from script.
-void JXCallCallback(JXValue* argv, int argc)
+void JXCallCallback(JS_Value* argv, int argc)
 {
     if (argc != 2)
     {
@@ -158,7 +158,7 @@ void JXCallCallback(JXValue* argv, int argc)
         return;
     }
 
-    const char* callIdHex = JX_GetString(argv);
+    const char* callIdHex = JS_GetString(argv);
     unsigned long long callId = std::strtoull(callIdHex, nullptr, 16);
     if (callId == 0)
     {
@@ -166,7 +166,7 @@ void JXCallCallback(JXValue* argv, int argc)
         return;
     }
 
-    const char* argsJson = JX_GetString(argv + 1);
+    const char* argsJson = JS_GetString(argv + 1);
 
     std::function<void(std::string)>* callbackPtr = reinterpret_cast<std::function<void(std::string)>*>(callId);
     try
@@ -188,24 +188,24 @@ inline void LogErrorAndThrow(const char* message)
 }
 
 // Static member initialization
-std::once_flag JXCoreEngine::_initOnce;
-std::string JXCoreEngine::_workingDirectory;
+std::once_flag NodeCoreEngine::_initOnce;
+std::string NodeCoreEngine::_workingDirectory;
 
-JXCoreEngine::JXCoreEngine() :
+NodeCoreEngine::NodeCoreEngine() :
     _started(false),
     _callScriptFunction(nullptr)
 {
     _dispatcher.Initialize();
 }
 
-JXCoreEngine::~JXCoreEngine()
+NodeCoreEngine::~NodeCoreEngine()
 {
     _dispatcher.Shutdown();
 }
 
-void JXCoreEngine::DefineScriptFile(std::string scriptFileName, std::string scriptCode)
+void NodeCoreEngine::DefineScriptFile(std::string scriptFileName, std::string scriptCode)
 {
-    LogTrace("JXCoreEngine::DefineScriptFile(\"%s\", \"...\")", scriptFileName.c_str());
+    LogTrace("NodeCoreEngine::DefineScriptFile(\"%s\", \"...\")", scriptFileName.c_str());
 
     if (scriptFileName == mainScriptFileName)
     {
@@ -220,14 +220,14 @@ void JXCoreEngine::DefineScriptFile(std::string scriptFileName, std::string scri
         }
         else
         {
-            JX_DefineFile(scriptFileName.c_str(), scriptCode.c_str());
+            JS_DefineFile(scriptFileName.c_str(), scriptCode.c_str());
         }
     });
 }
 
-void JXCoreEngine::Start(std::string workingDirectory, std::function<void(std::exception_ptr ex)> callback)
+void NodeCoreEngine::Start(std::string workingDirectory, std::function<void(std::exception_ptr ex)> callback)
 {
-    LogTrace("JXCoreEngine::Start(\"%s\")", workingDirectory.c_str());
+    LogTrace("NodeCoreEngine::Start(\"%s\")", workingDirectory.c_str());
 
     if (workingDirectory.length() == 0)
     {
@@ -240,22 +240,22 @@ void JXCoreEngine::Start(std::string workingDirectory, std::function<void(std::e
     }
     else if (workingDirectory != _workingDirectory)
     {
-        // This limitation of JXCore is not represented in the INodeEngine interface (e.g. as a static
+        // This limitation of Node is not represented in the INodeEngine interface (e.g. as a static
         // initialization method taking the working directory), because other node engines might not
         // have the same limitation.
-        LogErrorAndThrow("Cannot start multiple JXCore instances with different working directories.");
+        LogErrorAndThrow("Cannot start multiple Node instances with different working directories.");
     }
 
     try
     {
         std::call_once(_initOnce, [=]()
         {
-            JX_InitializeOnce(workingDirectory.c_str());
+            JS_InitializeOnce(workingDirectory.c_str());
         });
     }
     catch (...)
     {
-        LogError("Failed to initialize JXCore engine.");
+        LogError("Failed to initialize Node engine.");
         throw;
     }
 
@@ -265,50 +265,49 @@ void JXCoreEngine::Start(std::string workingDirectory, std::function<void(std::e
         {
             if (_started)
             {
-                LogErrorAndThrow("JXCore engine is already started.");
+                LogErrorAndThrow("Node engine is already started.");
             }
 
-            JX_InitializeNewEngine();
-            JX_DefineMainFile(mainScriptCode);
+            JS_DefineMainFile(mainScriptCode);
 
-            JX_DefineExtension("jxlog", JXLogCallback);
-            JX_DefineExtension("jxcall", JXCallCallback);
-            JX_DefineExtension("jxresult", JXResultCallback);
-            JX_DefineExtension("jxerror", JXErrorCallback);
+            JS_SetProcessNative("jxlog", JXLogCallback);
+            JS_SetProcessNative("jxcall", JXCallCallback);
+            JS_SetProcessNative("jxresult", JXResultCallback);
+            JS_SetProcessNative("jxerror", JXErrorCallback);
 
             for (const std::pair<std::string, std::string>& scriptEntry : _initialScriptMap)
             {
-                JX_DefineFile(scriptEntry.first.c_str(), scriptEntry.second.c_str());
+                JS_DefineFile(scriptEntry.first.c_str(), scriptEntry.second.c_str());
             }
 
-            JX_StartEngine();
+            JS_StartEngine("/");
 
             for (const std::pair<std::string, std::function<void(std::string)>> callFromScriptEntry : _initialCallFromScriptMap)
             {
                 this->RegisterCallFromScriptInternal(callFromScriptEntry.first, callFromScriptEntry.second);
             }
 
-            _callScriptFunction = new JXValue();
-            JX_New(reinterpret_cast<JXValue*>(_callScriptFunction));
-            JX_Evaluate(callScriptFunctionCode, nullptr, reinterpret_cast<JXValue*>(_callScriptFunction));
+            _callScriptFunction = new JS_Value();
+            JS_New(reinterpret_cast<JS_Value*>(_callScriptFunction));
+            JS_Evaluate(callScriptFunctionCode, nullptr, reinterpret_cast<JS_Value*>(_callScriptFunction));
 
             _started = true;
         }
         catch (...)
         {
-            LogError("Failed to start JXCore engine.");
+            LogError("Failed to start Node engine.");
             callback(std::current_exception());
             return;
         }
 
-        LogVerbose("Started JXCore engine.");
+        LogVerbose("Started Node engine.");
         callback(nullptr);
     });
 }
 
-void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
+void NodeCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
 {
-    LogTrace("JXCoreEngine::Stop()");
+    LogTrace("NodeCoreEngine::Stop()");
 
     _dispatcher.Dispatch([this, callback]()
     {
@@ -316,33 +315,33 @@ void JXCoreEngine::Stop(std::function<void(std::exception_ptr ex)> callback)
         {
             if (!_started)
             {
-                LogErrorAndThrow("JXCore engine is not started.");
+                LogErrorAndThrow("Node engine is not started.");
             }
 
-            JX_Free(reinterpret_cast<JXValue*>(_callScriptFunction));
-            delete reinterpret_cast<JXValue*>(_callScriptFunction);
+            JS_Free(reinterpret_cast<JS_Value*>(_callScriptFunction));
+            delete reinterpret_cast<JS_Value*>(_callScriptFunction);
             _callScriptFunction = nullptr;
 
-            JX_StopEngine();
+            JS_StopEngine();
             _started = false;
         }
         catch (...)
         {
-            LogError("Failed to stop JXCore engine.");
+            LogError("Failed to stop Node engine.");
             callback(std::current_exception());
             return;
         }
 
-        LogVerbose("Stopped JXCore engine.");
+        LogVerbose("Stopped Node engine.");
         callback(nullptr);
     });
 }
 
-void JXCoreEngine::CallScript(
+void NodeCoreEngine::CallScript(
     std::string scriptCode,
     std::function<void(std::string resultJson, std::exception_ptr ex)> callback)
 {
-    LogTrace("JXCoreEngine::CallScript(\"%s\")", scriptCode.c_str());
+    LogTrace("NodeCoreEngine::CallScript(\"%s\")", scriptCode.c_str());
 
     _dispatcher.Dispatch([this, scriptCode, callback]()
     {
@@ -350,11 +349,11 @@ void JXCoreEngine::CallScript(
     });
 }
 
-void JXCoreEngine::RegisterCallFromScript(
+void NodeCoreEngine::RegisterCallFromScript(
     std::string scriptFunctionName,
     std::function<void(std::string argsJson)> callback)
 {
-    LogTrace("JXCoreEngine::RegisterCallFromScript(\"%s\")", scriptFunctionName.c_str());
+    LogTrace("NodeCoreEngine::RegisterCallFromScript(\"%s\")", scriptFunctionName.c_str());
 
     _dispatcher.Dispatch([this, scriptFunctionName, callback]()
     {
@@ -369,7 +368,7 @@ void JXCoreEngine::RegisterCallFromScript(
     });
 }
 
-void JXCoreEngine::CallScriptInternal(
+void NodeCoreEngine::CallScriptInternal(
     std::string scriptCode,
     std::function<void(std::string resultJson, std::exception_ptr ex)> callback)
 {
@@ -377,7 +376,7 @@ void JXCoreEngine::CallScriptInternal(
     {
         if (!_started)
         {
-            LogErrorAndThrow("JXCore engine is not started.");
+            LogErrorAndThrow("Node engine is not started.");
         }
 
         std::function<void(std::string, std::exception_ptr)>* callbackPtr =
@@ -388,28 +387,28 @@ void JXCoreEngine::CallScriptInternal(
         char callIdBuf[20];
         snprintf(callIdBuf, sizeof(callIdBuf), "%llx", callId);
 
-        // Create JXValue arguments to the call-script function: callback pointer and script code string.
-        JXValue args[2];
-        JX_New(&args[0]);
-        JX_New(&args[1]);
-        JX_SetString(&args[0], callIdBuf);
-        JX_SetString(&args[1], scriptCode.c_str(), static_cast<int>(scriptCode.size()));
+        // Create JS_Value arguments to the call-script function: callback pointer and script code string.
+        JS_Value args[2];
+        JS_New(&args[0]);
+        JS_New(&args[1]);
+        JS_SetString(&args[0], callIdBuf);
+        JS_SetString(&args[1], scriptCode.c_str(), static_cast<int>(scriptCode.size()));
 
-        JXValue unusedResult;
-        JX_New(&unusedResult);
+        JS_Value unusedResult;
+        JS_New(&unusedResult);
 
         // Invoke the script function that will evaluate the provided script code then callback
         // via the result or error callback.
-        bool evaluated = JX_CallFunction(reinterpret_cast<JXValue*>(_callScriptFunction), args, 2, &unusedResult);
+        bool evaluated = JS_CallFunction(reinterpret_cast<JS_Value*>(_callScriptFunction), args, 2, &unusedResult);
 
-        JX_Free(&unusedResult);
-        JX_Free(&args[0]);
-        JX_Free(&args[1]);
+        JS_Free(&unusedResult);
+        JS_Free(&args[0]);
+        JS_Free(&args[1]);
 
         if (evaluated)
         {
             LogVerbose("Successfully evaluated script code.");
-            JX_LoopOnce();
+            JS_LoopOnce();
         }
         else
         {
@@ -422,7 +421,7 @@ void JXCoreEngine::CallScriptInternal(
     }
 }
 
-void JXCoreEngine::RegisterCallFromScriptInternal(
+void NodeCoreEngine::RegisterCallFromScriptInternal(
     std::string scriptFunctionName,
     std::function<void(std::string argsJson)> callback)
 {
@@ -444,17 +443,17 @@ void JXCoreEngine::RegisterCallFromScriptInternal(
         std::vector<char> scriptBuf(scriptBufSize);
         snprintf(scriptBuf.data(), scriptBufSize, scriptFunctionFormat, scriptFunctionName.c_str(), callId);
 
-        JXValue unusedResult;
-        JX_New(&unusedResult);
+        JS_Value unusedResult;
+        JS_New(&unusedResult);
 
         // Evaluate the script, which defines the named function as invoking the script call callback.
-        bool evaluated = JX_Evaluate(scriptBuf.data(), nullptr, &unusedResult);
+        bool evaluated = JS_Evaluate(scriptBuf.data(), nullptr, &unusedResult);
 
-        JX_Free(&unusedResult);
+        JS_Free(&unusedResult);
 
         if (evaluated)
         {
-            JX_LoopOnce();
+            JS_LoopOnce();
         }
         else
         {

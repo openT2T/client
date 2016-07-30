@@ -5,7 +5,7 @@
 #include "NodeEngine.h"
 #include "AsyncQueue.h"
 #include "WorkItemDispatcher.h"
-#include "JXCoreEngine.h"
+#include "NodeCoreEngine.h"
 
 using namespace Platform;
 using namespace Windows::Foundation;
@@ -50,7 +50,7 @@ String^ NodeCallEvent::ArgsJson::get()
 
 NodeEngine::NodeEngine()
 {
-    this->node = new JXCoreEngine();
+    this->node = new NodeCoreEngine();
     if (this->node == nullptr)
     {
         throw Platform::Exception::CreateException(E_OUTOFMEMORY);

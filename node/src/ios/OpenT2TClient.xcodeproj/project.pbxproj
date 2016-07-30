@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		96BA5E481D277D09001D9EB0 /* OpenT2TClient.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 96BA5E471D277D09001D9EB0 /* OpenT2TClient.h */; };
 		96BA5E521D277F0B001D9EB0 /* OT2TNodeEngine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 96BA5E511D277F0B001D9EB0 /* OT2TNodeEngine.mm */; };
-		96BA5E571D278950001D9EB0 /* JXCoreEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 96BA5E551D278950001D9EB0 /* JXCoreEngine.cpp */; };
+		96BA5E571D278950001D9EB0 /* NodeCoreEngine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 96BA5E551D278950001D9EB0 /* NodeCoreEngine.cpp */; };
 		96BA5E5A1D27939B001D9EB0 /* Log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 96BA5E591D27939B001D9EB0 /* Log.cpp */; };
 /* End PBXBuildFile section */
 
@@ -32,8 +32,8 @@
 		96BA5E501D277F0B001D9EB0 /* OT2TNodeEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OT2TNodeEngine.h; sourceTree = "<group>"; };
 		96BA5E511D277F0B001D9EB0 /* OT2TNodeEngine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OT2TNodeEngine.mm; sourceTree = "<group>"; };
 		96BA5E541D278950001D9EB0 /* INodeEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = INodeEngine.h; path = ../../common/INodeEngine.h; sourceTree = "<group>"; };
-		96BA5E551D278950001D9EB0 /* JXCoreEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = JXCoreEngine.cpp; path = ../../common/JXCoreEngine.cpp; sourceTree = "<group>"; };
-		96BA5E561D278950001D9EB0 /* JXCoreEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JXCoreEngine.h; path = ../../common/JXCoreEngine.h; sourceTree = "<group>"; };
+		96BA5E551D278950001D9EB0 /* NodeCoreEngine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NodeCoreEngine.cpp; path = ../../common/NodeCoreEngine.cpp; sourceTree = "<group>"; };
+		96BA5E561D278950001D9EB0 /* NodeCoreEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NodeCoreEngine.h; path = ../../common/NodeCoreEngine.h; sourceTree = "<group>"; };
 		96BA5E581D279042001D9EB0 /* Log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Log.h; path = ../../common/Log.h; sourceTree = "<group>"; };
 		96BA5E591D27939B001D9EB0 /* Log.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Log.cpp; path = ../../common/Log.cpp; sourceTree = "<group>"; };
 		96BA5E5B1D27A808001D9EB0 /* ObjCppUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjCppUtils.h; sourceTree = "<group>"; };
@@ -72,8 +72,8 @@
 				96BA5E581D279042001D9EB0 /* Log.h */,
 				96BA5E591D27939B001D9EB0 /* Log.cpp */,
 				96BA5E541D278950001D9EB0 /* INodeEngine.h */,
-				96BA5E561D278950001D9EB0 /* JXCoreEngine.h */,
-				96BA5E551D278950001D9EB0 /* JXCoreEngine.cpp */,
+				96BA5E561D278950001D9EB0 /* NodeCoreEngine.h */,
+				96BA5E551D278950001D9EB0 /* NodeCoreEngine.cpp */,
 				96BA5E501D277F0B001D9EB0 /* OT2TNodeEngine.h */,
 				96BA5E511D277F0B001D9EB0 /* OT2TNodeEngine.mm */,
 				96BA5E5B1D27A808001D9EB0 /* ObjCppUtils.h */,
@@ -139,7 +139,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				96BA5E5A1D27939B001D9EB0 /* Log.cpp in Sources */,
-				96BA5E571D278950001D9EB0 /* JXCoreEngine.cpp in Sources */,
+				96BA5E571D278950001D9EB0 /* NodeCoreEngine.cpp in Sources */,
 				96BA5E521D277F0B001D9EB0 /* OT2TNodeEngine.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

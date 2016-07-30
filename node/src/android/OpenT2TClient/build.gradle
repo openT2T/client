@@ -65,7 +65,7 @@ repositories {
         libjxcore {
             binaries.withType(SharedLibraryBinary) {
                 sharedLibraryFile = file(
-                    "../../external/jxcore/lib/Android/" +
+                    "../../external/wrapper/lib/Android/" +
                     "${targetPlatform.getName()}/libjxcore.so")
             }
         }

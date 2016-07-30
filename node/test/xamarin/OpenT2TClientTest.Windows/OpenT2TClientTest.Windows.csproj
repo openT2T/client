@@ -120,7 +120,7 @@
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\src\external\jxcore\lib\Windows\$(PlatformName)\jx.dll">
+    <Content Include="..\..\..\src\external\wrapper\lib\Windows\$(PlatformName)\jx.dll">
       <Link>jx.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
